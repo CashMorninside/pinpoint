@@ -2,14 +2,34 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Fairway Dreams</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323:wght@400&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-html,body{width:100%;height:100%;background:#0a0a0a;display:flex;justify-content:center;align-items:flex-start;overflow:hidden;}
+*{
+  box-sizing:border-box;margin:0;padding:0;
+  -webkit-tap-highlight-color:transparent;
+  -webkit-user-select:none;user-select:none;
+  -webkit-touch-callout:none;
+}
+html{
+  height:100%;overflow:hidden;
+  /* Prevent iOS bounce */
+  overscroll-behavior:none;
+}
+body{
+  width:100%;height:100%;
+  background:#0a0a0a;
+  overflow:hidden;
+  overscroll-behavior:none;
+  touch-action:none;
+  display:flex;justify-content:center;align-items:flex-start;
+}
 :root{
   --bg:#0d1f0e;--surface:#1a2e1b;--panel:#243825;
   --accent:#50c878;--gold:#f5c518;--red:#d63a3a;--blue:#4488cc;
@@ -17,16 +37,22 @@ html,body{width:100%;height:100%;background:#0a0a0a;display:flex;justify-content
   --font-ui:'Press Start 2P',monospace;--font-body:'VT323',monospace;
 }
 #game{
-  width:390px;height:100vh;max-height:844px;
+  /* Fill viewport — JS sets exact px height for iOS Safari */
+  width:100%;max-width:430px;
+  height:100vh;
   background:var(--bg);color:var(--text);
   font-family:var(--font-ui);
   position:relative;overflow:hidden;
   display:flex;flex-direction:column;
+  /* Safe areas for notch/home-bar */
+  padding-top:env(safe-area-inset-top);
+  padding-bottom:env(safe-area-inset-bottom);
 }
 .screen{
   display:none;flex-direction:column;
   width:100%;height:100%;
   overflow-y:auto;overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
 }
 .screen.active{display:flex;}
 
@@ -53,6 +79,10 @@ html,body{width:100%;height:100%;background:#0a0a0a;display:flex;justify-content
   box-shadow:4px 4px 0 #2d6b3e,-2px -2px 0 #7ddc9a;
   transition:transform 0.08s;
   min-width:160px;text-align:center;
+  /* Remove 300ms touch delay */
+  touch-action:manipulation;
+  /* Minimum tap target */
+  min-height:44px;
 }
 .btn:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #2d6b3e;}
 .btn-secondary{background:var(--surface);color:var(--accent);box-shadow:4px 4px 0 #0a1a0b,-2px -2px 0 #3a4e3b;}
@@ -80,7 +110,7 @@ html,body{width:100%;height:100%;background:#0a0a0a;display:flex;justify-content
 }
 #map-title{font-size:8px;color:var(--accent);}
 #map-buttons{display:flex;gap:8px;}
-#map-canvas{display:block;width:100%;flex:1;}
+#map-canvas{display:block;width:100%;flex:1;touch-action:manipulation;}
 #map-footer{
   padding:12px 16px;background:var(--surface);
   border-top:2px solid var(--panel);flex-shrink:0;
@@ -180,7 +210,7 @@ html,body{width:100%;height:100%;background:#0a0a0a;display:flex;justify-content
   background:var(--surface);color:var(--text);
   border:1px solid var(--panel);padding:10px 8px;
   flex:1;min-width:120px;cursor:pointer;text-align:left;
-  line-height:1.3;
+  line-height:1.3;touch-action:manipulation;min-height:56px;
 }
 .move-btn:active{background:var(--panel);}
 .move-btn strong{font-family:var(--font-ui);font-size:7px;display:block;color:var(--accent);margin-bottom:2px;}
@@ -193,6 +223,7 @@ html,body{width:100%;height:100%;background:#0a0a0a;display:flex;justify-content
   background:var(--surface);color:var(--dim);
   border:none;border-right:1px solid var(--panel);
   cursor:pointer;text-align:center;
+  touch-action:manipulation;min-height:52px;
 }
 .shape-btn:last-child{border-right:none;}
 .shape-btn.selected{background:var(--panel);color:var(--accent);}
@@ -204,12 +235,14 @@ html,body{width:100%;height:100%;background:#0a0a0a;display:flex;justify-content
   flex:1;font-family:var(--font-ui);font-size:10px;
   background:var(--accent);color:#0a1a0b;
   border:none;padding:14px;cursor:pointer;
+  touch-action:manipulation;min-height:52px;
 }
 #swing-btn:active{background:#3da060;}
 #scorecard-btn{
   width:56px;background:var(--surface);color:var(--text);
   border:none;border-left:1px solid var(--panel);
   font-size:20px;cursor:pointer;
+  touch-action:manipulation;
 }
 
 /* ── SHOP ── */
@@ -221,11 +254,12 @@ html,body{width:100%;height:100%;background:#0a0a0a;display:flex;justify-content
 .shop-tab{
   flex:1;padding:10px 4px;text-align:center;
   font-family:var(--font-body);font-size:16px;color:var(--dim);
-  background:var(--surface);border:none;border-right:1px solid var(--panel);cursor:pointer;
+  background:var(--surface);border:none;border-right:1px solid var(--panel);
+  cursor:pointer;touch-action:manipulation;min-height:44px;
 }
 .shop-tab:last-child{border-right:none;}
 .shop-tab.active{background:var(--panel);color:var(--accent);}
-#shop-list{flex:1;overflow-y:auto;padding:8px;}
+#shop-list{flex:1;overflow-y:auto;padding:8px;-webkit-overflow-scrolling:touch;touch-action:pan-y;}
 .shop-item{
   display:flex;align-items:center;gap:10px;
   padding:12px;margin-bottom:6px;
@@ -244,7 +278,7 @@ html,body{width:100%;height:100%;background:#0a0a0a;display:flex;justify-content
 #cards-header{padding:12px 16px;background:var(--surface);border-bottom:2px solid var(--panel);flex-shrink:0;display:flex;justify-content:space-between;align-items:center;}
 #cards-title{font-size:9px;color:var(--text);}
 #cards-back{font-size:8px;padding:10px 14px;min-width:60px;}
-#cards-list{flex:1;overflow-y:auto;padding:8px;}
+#cards-list{flex:1;overflow-y:auto;padding:8px;-webkit-overflow-scrolling:touch;touch-action:pan-y;}
 .card-slot{
   margin-bottom:8px;padding:12px;
   border:2px solid var(--panel);
@@ -275,7 +309,7 @@ html,body{width:100%;height:100%;background:#0a0a0a;display:flex;justify-content
 #player-card-header{padding:12px 16px;background:var(--surface);border-bottom:2px solid var(--panel);flex-shrink:0;display:flex;justify-content:space-between;align-items:center;}
 #player-card-title{font-size:9px;color:var(--accent);}
 #player-card-back{font-size:8px;padding:10px 14px;min-width:60px;}
-#player-card-body{flex:1;overflow-y:auto;padding:16px;}
+#player-card-body{flex:1;overflow-y:auto;padding:16px;-webkit-overflow-scrolling:touch;touch-action:pan-y;}
 #pc-icon-name{display:flex;align-items:center;gap:16px;margin-bottom:16px;}
 #pc-icon{font-size:56px;}
 .pc-name-col{}
@@ -304,6 +338,7 @@ html,body{width:100%;height:100%;background:#0a0a0a;display:flex;justify-content
 .overlay{
   display:none;position:absolute;top:0;left:0;
   width:100%;height:100%;z-index:100;
+  touch-action:manipulation;
 }
 .overlay.active{display:flex;}
 
@@ -986,7 +1021,7 @@ var LOCATIONS = {
     totalHoles: 3, toWin: 2,
     parValues: [4,3,5], holeYards: [380,145,520],
     description: 'A classic municipal track with wide fairways.',
-    pin: {x:158, y:248}
+    pinF: {x:158/390, y:248/420}
   },
   parkview: {
     id: 'parkview', name: 'Parkview Classic', circuit: 'muni',
@@ -994,7 +1029,7 @@ var LOCATIONS = {
     totalHoles: 3, toWin: 2,
     parValues: [4,4,3], holeYards: [410,395,175],
     description: 'Tree-lined fairways. Accuracy matters here.',
-    pin: {x:210, y:228}
+    pinF: {x:210/390, y:228/420}
   },
   munichamp: {
     id: 'munichamp', name: 'Muni Championship', circuit: 'muni',
@@ -1002,7 +1037,7 @@ var LOCATIONS = {
     totalHoles: 3, toWin: 2,
     parValues: [5,4,4], holeYards: [550,440,385],
     description: 'The Muni Circuit finale. Win this to go County.',
-    pin: {x:262, y:210},
+    pinF: {x:262/390, y:210/420},
     isTrophy: true
   },
   nassau: {
@@ -1011,7 +1046,7 @@ var LOCATIONS = {
     totalHoles: 6, toWin: 4,
     parValues: [4,3,4,5,4,3], holeYards: [395,155,420,510,380,175],
     description: 'County circuit opens here. Tight greens.',
-    pin: {x:195, y:185}
+    pinF: {x:195/390, y:185/420}
   },
   liclassic: {
     id: 'liclassic', name: 'Long Island Classic', circuit: 'county',
@@ -1019,7 +1054,7 @@ var LOCATIONS = {
     totalHoles: 6, toWin: 4,
     parValues: [4,5,3,4,4,5], holeYards: [430,540,165,400,415,495],
     description: 'Links-style track. Wind plays a factor.',
-    pin: {x:240, y:175}
+    pinF: {x:240/390, y:175/420}
   },
   groove: {
     id: 'groove', name: 'The Groove Session', circuit: 'county',
@@ -1027,7 +1062,7 @@ var LOCATIONS = {
     totalHoles: 6, toWin: 4,
     parValues: [4,4,3,5,4,4], holeYards: [385,410,170,530,400,420],
     description: 'Laid-back layout, deceptively tricky.',
-    pin: {x:285, y:168}
+    pinF: {x:285/390, y:168/420}
   },
   countychamp: {
     id: 'countychamp', name: 'County Championship', circuit: 'county',
@@ -1035,7 +1070,7 @@ var LOCATIONS = {
     totalHoles: 6, toWin: 4,
     parValues: [5,4,3,4,4,5], holeYards: [520,445,185,415,390,510],
     description: 'County finale. Beat Buckshot to reach State.',
-    pin: {x:318, y:162},
+    pinF: {x:318/390, y:162/420},
     isTrophy: true
   },
   empirestate: {
@@ -1044,7 +1079,7 @@ var LOCATIONS = {
     totalHoles: 9, toWin: 5,
     parValues: [4,3,5,4,4,3,5,4,4], holeYards: [410,160,540,395,425,180,510,420,440],
     description: 'State circuit begins. The Artist awaits.',
-    pin: {x:210, y:148}
+    pinF: {x:210/390, y:148/420}
   },
   nystate: {
     id: 'nystate', name: 'NY State Championship', circuit: 'state',
@@ -1052,7 +1087,7 @@ var LOCATIONS = {
     totalHoles: 9, toWin: 5,
     parValues: [4,5,3,4,4,5,3,4,4], holeYards: [430,555,170,420,415,525,175,445,460],
     description: 'One match from the Commissioner Cup.',
-    pin: {x:268, y:140},
+    pinF: {x:268/390, y:140/420},
     isTrophy: true
   },
   commissioner: {
@@ -1061,7 +1096,7 @@ var LOCATIONS = {
     totalHoles: 9, toWin: 5,
     parValues: [5,4,3,4,4,5,4,3,4], holeYards: [545,435,175,420,415,540,430,165,460],
     description: 'The final match. Garth Brux. Everything on the line.',
-    pin: {x:315, y:132},
+    pinF: {x:315/390, y:132/420},
     isTrophy: true, isFinal: true
   }
 };
@@ -1483,36 +1518,35 @@ var _mapCtx = null;
 var _mapTrees = [];
 var _mapClickHandler = null;
 
-// Long Island polygon points (approximate, scaled to 390×420 canvas)
-var LI_POLY = [
-  // Brooklyn/Queens area
-  [20,310],[45,295],[70,280],[95,270],[115,265],
-  // Nassau county south shore
-  [140,268],[170,262],[200,258],[230,255],[260,252],[290,250],
-  // East end / Hamptons tip
-  [320,245],[345,235],[368,222],[382,210],[388,195],
-  // North fork upper
-  [385,180],[370,165],[350,158],[325,155],[300,155],
-  // Sound shore
-  [275,152],[250,148],[225,145],[200,143],[175,142],
-  // North shore back west
-  [150,144],[125,148],[100,155],[78,162],[58,172],
-  // Back to Brooklyn
-  [40,185],[25,200],[15,220],[12,245],[15,275],[20,310]
+// Long Island polygon — stored as fractions of base 390×420 space
+// drawMap() multiplies by actual canvas.width/height
+var LI_POLY_F = [
+  [20/390,310/420],[45/390,295/420],[70/390,280/420],[95/390,270/420],[115/390,265/420],
+  [140/390,268/420],[170/390,262/420],[200/390,258/420],[230/390,255/420],
+  [260/390,252/420],[290/390,250/420],[320/390,245/420],[345/390,235/420],
+  [368/390,222/420],[382/390,210/420],[388/390,195/420],[385/390,180/420],
+  [370/390,165/420],[350/390,158/420],[325/390,155/420],[300/390,155/420],
+  [275/390,152/420],[250/390,148/420],[225/390,145/420],[200/390,143/420],
+  [175/390,142/420],[150/390,144/420],[125/390,148/420],[100/390,155/420],
+  [78/390,162/420],[58/390,172/420],[40/390,185/420],[25/390,200/420],
+  [15/390,220/420],[12/390,245/420],[15/390,275/420],[20/390,310/420]
 ];
 
-var WATER_POLY = [
-  [0,420],[0,290],[20,310],[15,275],[12,245],[15,220],
-  [25,200],[40,185],[58,172],[78,162],[100,155],[125,148],
-  [150,144],[175,142],[200,143],[225,145],[250,148],[275,152],
-  [300,155],[325,155],[350,158],[370,165],[385,180],
-  [388,195],[390,220],[390,420]
+var WATER_POLY_F = [
+  [0,1],[0,290/420],[20/390,310/420],[15/390,275/420],[12/390,245/420],
+  [15/390,220/420],[25/390,200/420],[40/390,185/420],[58/390,172/420],
+  [78/390,162/420],[100/390,155/420],[125/390,148/420],[150/390,144/420],
+  [175/390,142/420],[200/390,143/420],[225/390,145/420],[250/390,148/420],
+  [275/390,152/420],[300/390,155/420],[325/390,155/420],[350/390,158/420],
+  [370/390,165/420],[385/390,180/420],[388/390,195/420],[1,220/420],[1,1]
 ];
 
 function enterMap() {
   updateMapFooter();
   _mapCanvas = safeGet('map-canvas');
   if (!_mapCanvas) return;
+  // Resize canvas to match display size so drawing isn't stretched
+  resizeMapCanvas();
   _mapCtx = _mapCanvas.getContext('2d');
   generateMapTrees();
   if (_mapClickHandler) {
@@ -1536,18 +1570,21 @@ function exitMap() {
 
 function generateMapTrees() {
   _mapTrees = [];
-  var treeZones = [
-    {x:30,y:185,w:60,count:5},
-    {x:100,y:160,w:80,count:6},
-    {x:200,y:155,w:60,count:4},
-    {x:300,y:162,w:50,count:4}
+  var W = (_mapCanvas && _mapCanvas.width)  || 390;
+  var H = (_mapCanvas && _mapCanvas.height) || 420;
+  // Tree zones defined as fractions of 390×420 base
+  var treeZonesF = [
+    {xf:30/390, yf:185/420, wf:60/390, count:5},
+    {xf:100/390,yf:160/420, wf:80/390, count:6},
+    {xf:200/390,yf:155/420, wf:60/390, count:4},
+    {xf:300/390,yf:162/420, wf:50/390, count:4}
   ];
-  for (var z = 0; z < treeZones.length; z++) {
-    var tz = treeZones[z];
+  for (var z = 0; z < treeZonesF.length; z++) {
+    var tz = treeZonesF[z];
     for (var t = 0; t < tz.count; t++) {
       _mapTrees.push({
-        x: tz.x + rnd(0, tz.w),
-        y: tz.y + rnd(-8, 8),
+        x: Math.floor((tz.xf + Math.random() * tz.wf) * W),
+        y: Math.floor(tz.yf * H + rnd(-8,8)),
         h: rnd(14, 22)
       });
     }
@@ -1566,7 +1603,8 @@ function startMapLoop() {
 function drawMap(ts) {
   if (!_mapCtx) return;
   var ctx = _mapCtx;
-  var W = 390, H = 420;
+  var W = ctx.canvas.width;
+  var H = ctx.canvas.height;
 
   // Sky / ocean background
   var skyGrad = ctx.createLinearGradient(0,0,0,H);
@@ -1575,40 +1613,37 @@ function drawMap(ts) {
   ctx.fillStyle = skyGrad;
   ctx.fillRect(0,0,W,H);
 
-  // Water fill (south shore)
+  // Water fill (south shore) — fractional coords scaled to canvas
   ctx.fillStyle = '#1e4a7a';
   ctx.beginPath();
-  ctx.moveTo(WATER_POLY[0][0], WATER_POLY[0][1]);
-  for (var i = 1; i < WATER_POLY.length; i++) {
-    ctx.lineTo(WATER_POLY[i][0], WATER_POLY[i][1]);
+  ctx.moveTo(WATER_POLY_F[0][0]*W, WATER_POLY_F[0][1]*H);
+  for (var i = 1; i < WATER_POLY_F.length; i++) {
+    ctx.lineTo(WATER_POLY_F[i][0]*W, WATER_POLY_F[i][1]*H);
   }
   ctx.closePath();
   ctx.fill();
 
   // Long Island land mass
-  var landGrad = ctx.createLinearGradient(0,140,0,320);
+  var landGrad = ctx.createLinearGradient(0, 0.33*H, 0, 0.76*H);
   landGrad.addColorStop(0,'#2d5a2d');
   landGrad.addColorStop(1,'#1a3a1a');
   ctx.fillStyle = landGrad;
   ctx.strokeStyle = '#50c87844';
   ctx.lineWidth = 1;
   ctx.beginPath();
-  ctx.moveTo(LI_POLY[0][0], LI_POLY[0][1]);
-  for (var j = 1; j < LI_POLY.length; j++) {
-    ctx.lineTo(LI_POLY[j][0], LI_POLY[j][1]);
+  ctx.moveTo(LI_POLY_F[0][0]*W, LI_POLY_F[0][1]*H);
+  for (var j = 1; j < LI_POLY_F.length; j++) {
+    ctx.lineTo(LI_POLY_F[j][0]*W, LI_POLY_F[j][1]*H);
   }
   ctx.closePath();
   ctx.fill();
   ctx.stroke();
 
-  // Trees on land
-  ctx.fillStyle = '#1a3a1a';
+  // Trees on land (positions are already in pixel space, scale to canvas)
   for (var k = 0; k < _mapTrees.length; k++) {
     var tr = _mapTrees[k];
-    // trunk
     ctx.fillStyle = '#2a1a0a';
     ctx.fillRect(tr.x - 1, tr.y, 2, 4);
-    // canopy triangle
     ctx.fillStyle = '#1a4a1a';
     ctx.beginPath();
     ctx.moveTo(tr.x, tr.y - tr.h);
@@ -1618,15 +1653,13 @@ function drawMap(ts) {
     ctx.fill();
   }
 
-  // "LONG ISLAND" text
+  // Labels (scaled to canvas)
   ctx.fillStyle = '#50c87866';
-  ctx.font = '8px monospace';
-  ctx.fillText('LONG ISLAND', 140, 200);
-
-  // "BROOKLYN" label
+  ctx.font = Math.floor(W * 0.02) + 'px monospace';
+  ctx.fillText('LONG ISLAND', 0.36*W, 0.48*H);
   ctx.fillStyle = '#50c87855';
-  ctx.font = '7px monospace';
-  ctx.fillText('BROOKLYN', 28, 268);
+  ctx.font = Math.floor(W * 0.018) + 'px monospace';
+  ctx.fillText('BROOKLYN', 0.07*W, 0.64*H);
 
   // Draw course pins
   var locIds = Object.keys(LOCATIONS);
@@ -1636,60 +1669,55 @@ function drawMap(ts) {
     var ls = locState[lid];
     if (!ls) continue;
 
-    var px = loc.pin.x;
-    var py = loc.pin.y;
+    var px = loc.pinF.x * W;
+    var py = loc.pinF.y * H;
     var beaten = ls.beaten;
     var unlocked = ls.unlocked;
-
     var pulse = 0.65 + 0.35 * Math.sin(ts / 400 + p * 0.8);
+    var pinR = Math.max(6, W * 0.02);
 
     if (!unlocked) {
-      // locked — dim gray dot
       ctx.globalAlpha = 0.25;
       ctx.fillStyle = '#888888';
       ctx.beginPath();
-      ctx.arc(px, py, 6, 0, 6.283);
+      ctx.arc(px, py, pinR, 0, 6.283);
       ctx.fill();
       ctx.globalAlpha = 1;
     } else if (beaten) {
-      // beaten — solid accent filled
       ctx.fillStyle = '#50c878';
       ctx.beginPath();
-      ctx.arc(px, py, 7, 0, 6.283);
+      ctx.arc(px, py, pinR + 1, 0, 6.283);
       ctx.fill();
       ctx.fillStyle = '#0a1a0b';
-      ctx.font = '8px monospace';
-      ctx.fillText('✓', px - 4, py + 3);
+      ctx.font = Math.floor(pinR) + 'px monospace';
+      ctx.fillText('✓', px - pinR * 0.5, py + pinR * 0.4);
     } else {
-      // available — pulsing white ring + inner dot
       ctx.globalAlpha = pulse;
       ctx.strokeStyle = loc.isTrophy ? '#f5c518' : '#ffffff';
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.arc(px, py, 8, 0, 6.283);
+      ctx.arc(px, py, pinR + 2, 0, 6.283);
       ctx.stroke();
       ctx.fillStyle = loc.isTrophy ? '#f5c518' : '#50c878';
       ctx.globalAlpha = 0.9;
       ctx.beginPath();
-      ctx.arc(px, py, 4, 0, 6.283);
+      ctx.arc(px, py, pinR * 0.5, 0, 6.283);
       ctx.fill();
       ctx.globalAlpha = 1;
     }
 
-    // Pin label
     if (unlocked) {
       ctx.fillStyle = beaten ? '#50c878aa' : '#ffffffcc';
-      ctx.font = '7px monospace';
-      var label = loc.name;
-      if (loc.isTrophy) label = '🏆 ' + loc.name;
-      ctx.fillText(label, px + 11, py + 3);
+      ctx.font = Math.floor(W * 0.018) + 'px monospace';
+      var label = loc.isTrophy ? '🏆 ' + loc.name : loc.name;
+      ctx.fillText(label, px + pinR + 3, py + 3);
     }
   }
 
-  // Map title
+  // Bottom hint
   ctx.fillStyle = '#50c87888';
-  ctx.font = '9px monospace';
-  ctx.fillText('TAP A COURSE TO PLAY', 50, 400);
+  ctx.font = Math.floor(W * 0.023) + 'px monospace';
+  ctx.fillText('TAP A COURSE TO PLAY', 0.13*W, H - 10);
 }
 
 function handleMapClick(e) {
@@ -1714,9 +1742,12 @@ function handleMapClick(e) {
     var loc = LOCATIONS[lid];
     var ls = locState[lid];
     if (!ls || !ls.unlocked) continue;
-    var dx = cx - loc.pin.x;
-    var dy = cy - loc.pin.y;
-    if (dx*dx + dy*dy <= 484) { // radius 22
+    var pinPx = loc.pinF.x * _mapCanvas.width;
+    var pinPy = loc.pinF.y * _mapCanvas.height;
+    var dx = cx - pinPx;
+    var dy = cy - pinPy;
+    var tapRadius = Math.max(22, _mapCanvas.width * 0.058);
+    if (dx*dx + dy*dy <= tapRadius*tapRadius) {
       showLocation(lid);
       return;
     }
@@ -3875,6 +3906,31 @@ function showLevelUp(callback) {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// MOBILE — VIEWPORT & CANVAS SIZING
+// ═══════════════════════════════════════════════════════════════
+
+function setGameHeight() {
+  var game = document.getElementById('game');
+  if (!game) return;
+  // window.innerHeight correctly excludes iOS Safari address bar
+  game.style.height = window.innerHeight + 'px';
+}
+
+// Prevent iOS bounce / rubber-band scrolling on the game container
+function preventBodyScroll(e) {
+  e.preventDefault();
+}
+
+// Resize map canvas to match actual rendered size (prevents vertical stretch)
+function resizeMapCanvas() {
+  if (!_mapCanvas) return;
+  var h = _mapCanvas.offsetHeight;
+  var w = _mapCanvas.offsetWidth;
+  if (h > 0 && _mapCanvas.height !== h) _mapCanvas.height = h;
+  if (w > 0 && _mapCanvas.width !== w)  _mapCanvas.width  = w;
+}
+
+// ═══════════════════════════════════════════════════════════════
 // INIT — WIRE ALL BUTTONS ONCE
 // ═══════════════════════════════════════════════════════════════
 function init() {
@@ -3965,11 +4021,15 @@ function init() {
     showScreen('screen-map');
   });
 
-  // Dialogue tap
-  safeGet('overlay-dialogue').addEventListener('click', dlgTap);
+  // Dialogue tap — wire both click and touchend for instant response on iOS
+  var dlgEl = safeGet('overlay-dialogue');
+  dlgEl.addEventListener('click', dlgTap);
+  dlgEl.addEventListener('touchend', function(e) { e.preventDefault(); dlgTap(); });
 
   // Message box tap
-  safeGet('msg-box').addEventListener('click', msgTap);
+  var msgEl = safeGet('msg-box');
+  msgEl.addEventListener('click', msgTap);
+  msgEl.addEventListener('touchend', function(e) { e.preventDefault(); msgTap(); });
 
   // Shape buttons
   safeGet('shape-draw').addEventListener('click', function() { pickShape('draw'); });
@@ -4017,7 +4077,9 @@ function init() {
   safeGet('putt-canvas').addEventListener('touchend', function(e) { e.preventDefault(); puttTap(); });
 
   // Card tap
-  safeGet('overlay-card').addEventListener('click', cardTap);
+  var cardEl = safeGet('overlay-card');
+  cardEl.addEventListener('click', cardTap);
+  cardEl.addEventListener('touchend', function(e) { e.preventDefault(); cardTap(); });
 
   // Shop tabs
   var shopTabEls = document.querySelectorAll('.shop-tab');
@@ -4037,6 +4099,14 @@ function init() {
 
   // Screen hooks
   SCREEN_HOOKS['screen-map'] = { enter: enterMap, exit: exitMap };
+
+  // Mobile: fix viewport height, prevent scroll
+  setGameHeight();
+  window.addEventListener('resize', setGameHeight);
+  window.addEventListener('orientationchange', function() {
+    setTimeout(setGameHeight, 200);
+  });
+  document.body.addEventListener('touchmove', preventBodyScroll, {passive: false});
 
   // Generate battle trees once
   generateBattleTrees();
