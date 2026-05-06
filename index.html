@@ -1,0 +1,4059 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Fairway Dreams</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323:wght@400&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{width:100%;height:100%;background:#0a0a0a;display:flex;justify-content:center;align-items:flex-start;overflow:hidden;}
+:root{
+  --bg:#0d1f0e;--surface:#1a2e1b;--panel:#243825;
+  --accent:#50c878;--gold:#f5c518;--red:#d63a3a;--blue:#4488cc;
+  --text:#e8f5e9;--dim:#8faa90;
+  --font-ui:'Press Start 2P',monospace;--font-body:'VT323',monospace;
+}
+#game{
+  width:390px;height:100vh;max-height:844px;
+  background:var(--bg);color:var(--text);
+  font-family:var(--font-ui);
+  position:relative;overflow:hidden;
+  display:flex;flex-direction:column;
+}
+.screen{
+  display:none;flex-direction:column;
+  width:100%;height:100%;
+  overflow-y:auto;overflow-x:hidden;
+}
+.screen.active{display:flex;}
+
+/* ── TITLE ── */
+#screen-title{
+  background:linear-gradient(180deg,#0a1a0b 0%,#1a3a1b 60%,#243825 100%);
+  align-items:center;justify-content:center;
+  gap:24px;
+}
+.title-logo{text-align:center;}
+.title-logo h1{
+  font-size:18px;line-height:1.6;color:var(--accent);
+  text-shadow:0 0 20px #50c87888,2px 2px 0 #0a1a0b;
+}
+.title-logo p{font-family:var(--font-body);font-size:22px;color:var(--dim);margin-top:8px;}
+.title-scene{font-size:48px;text-align:center;}
+.title-badges{font-family:var(--font-body);font-size:18px;color:var(--dim);text-align:center;}
+.btn{
+  font-family:var(--font-ui);font-size:10px;color:#0a1a0b;
+  background:var(--accent);border:none;
+  padding:14px 28px;cursor:pointer;
+  image-rendering:pixelated;
+  position:relative;
+  box-shadow:4px 4px 0 #2d6b3e,-2px -2px 0 #7ddc9a;
+  transition:transform 0.08s;
+  min-width:160px;text-align:center;
+}
+.btn:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #2d6b3e;}
+.btn-secondary{background:var(--surface);color:var(--accent);box-shadow:4px 4px 0 #0a1a0b,-2px -2px 0 #3a4e3b;}
+.btn-red{background:var(--red);color:#fff;box-shadow:4px 4px 0 #7a1a1a,-2px -2px 0 #ff6666;}
+.btn-gold{background:var(--gold);color:#1a1000;box-shadow:4px 4px 0 #7a6200,-2px -2px 0 #ffe066;}
+.btn-sm{font-size:8px;padding:10px 16px;min-width:80px;}
+
+/* ── NAME ENTRY ── */
+#screen-name{align-items:center;justify-content:center;gap:20px;padding:40px 20px;}
+#screen-name h2{font-size:10px;color:var(--accent);text-align:center;}
+#name-input{
+  font-family:var(--font-ui);font-size:12px;
+  background:var(--surface);border:2px solid var(--accent);
+  color:var(--text);padding:12px 16px;width:100%;
+  max-width:280px;text-align:center;outline:none;
+}
+#name-input:focus{border-color:var(--gold);}
+
+/* ── MAP ── */
+#screen-map{flex-direction:column;}
+#map-header{
+  padding:12px 16px;background:var(--surface);
+  display:flex;justify-content:space-between;align-items:center;
+  border-bottom:2px solid var(--panel);flex-shrink:0;
+}
+#map-title{font-size:8px;color:var(--accent);}
+#map-buttons{display:flex;gap:8px;}
+#map-canvas{display:block;width:100%;flex:1;}
+#map-footer{
+  padding:12px 16px;background:var(--surface);
+  border-top:2px solid var(--panel);flex-shrink:0;
+}
+#map-cash{font-size:9px;color:var(--gold);}
+#map-level{font-size:8px;color:var(--dim);margin-top:4px;}
+
+/* ── LOCATION ── */
+#screen-location{padding:0;flex-direction:column;}
+#loc-header{
+  padding:16px;background:var(--surface);
+  border-bottom:2px solid var(--panel);flex-shrink:0;
+}
+#loc-name{font-size:10px;color:var(--accent);margin-bottom:6px;}
+#loc-circuit{font-family:var(--font-body);font-size:18px;color:var(--dim);}
+#loc-rival-info{
+  padding:16px;display:flex;align-items:center;gap:16px;
+  flex-shrink:0;
+}
+#loc-rival-icon{font-size:48px;}
+.loc-rival-details{flex:1;}
+#loc-rival-name{font-size:9px;color:var(--text);margin-bottom:6px;}
+#loc-rival-style{font-family:var(--font-body);font-size:18px;color:var(--dim);margin-bottom:4px;}
+#loc-rival-record{font-family:var(--font-body);font-size:16px;color:var(--dim);}
+#loc-frankie-quote{
+  margin:0 16px;padding:12px;
+  background:var(--surface);border-left:3px solid var(--accent);
+  font-family:var(--font-body);font-size:18px;line-height:1.4;color:var(--text);
+}
+#loc-conditions{
+  margin:12px 16px 0;padding:12px;
+  background:var(--panel);
+  font-family:var(--font-body);font-size:16px;color:var(--dim);
+  display:flex;gap:16px;flex-wrap:wrap;
+}
+#loc-conditions span{color:var(--text);}
+#loc-actions{
+  padding:16px;display:flex;flex-direction:column;gap:10px;
+  margin-top:auto;flex-shrink:0;
+}
+
+/* ── ENCOUNTER ── */
+#screen-encounter{align-items:center;justify-content:center;padding:20px;gap:20px;}
+#enc-rival-display{font-size:64px;text-align:center;}
+#enc-rival-name{font-size:9px;color:var(--accent);text-align:center;}
+#enc-actions{display:flex;flex-direction:column;gap:12px;width:100%;max-width:280px;}
+
+/* ── BATTLE ── */
+#screen-battle{flex-direction:column;flex-shrink:0;}
+#battle-top{
+  padding:10px 12px;background:var(--surface);
+  border-bottom:2px solid var(--panel);flex-shrink:0;
+}
+#rival-row{display:flex;align-items:center;gap:10px;margin-bottom:6px;}
+#rival-icon-sm{font-size:24px;flex-shrink:0;}
+.rival-info-col{flex:1;}
+#rival-name-battle{font-size:7px;color:var(--text);margin-bottom:4px;}
+.hp-bar-wrap{background:#0a1a0b;height:12px;position:relative;border:1px solid var(--panel);}
+.hp-bar{height:100%;transition:width 0.4s,background 0.4s;}
+.hp-label{position:absolute;right:4px;top:0;font-size:6px;line-height:12px;color:#fff;}
+#streak-badge{
+  font-family:var(--font-body);font-size:16px;
+  padding:2px 8px;background:var(--red);color:#fff;
+  display:none;animation:fireFlash 0.5s infinite alternate;
+}
+@keyframes fireFlash{from{background:#ff4400;}to{background:var(--gold);}}
+#battle-canvas{display:block;width:390px;height:220px;flex-shrink:0;}
+#player-row{
+  padding:10px 12px;background:var(--surface);
+  border-top:2px solid var(--panel);flex-shrink:0;
+}
+#player-battle-name{font-size:7px;color:var(--accent);margin-bottom:4px;}
+#momentum-row{display:flex;gap:4px;margin-top:6px;align-items:center;}
+#momentum-label{font-size:6px;color:var(--dim);margin-right:4px;}
+.pip{
+  width:14px;height:14px;border:1px solid var(--dim);
+  display:inline-block;
+}
+.pip.active-pos{background:var(--accent);}
+.pip.active-neg{background:var(--red);}
+.pip.center{border-color:var(--text);}
+#msg-box{
+  padding:10px 12px;background:#0a1a0b;
+  border-top:2px solid var(--panel);border-bottom:2px solid var(--panel);
+  font-family:var(--font-body);font-size:20px;line-height:1.4;
+  min-height:60px;flex-shrink:0;
+  position:relative;cursor:pointer;
+}
+#msg-tap{font-size:14px;color:var(--dim);position:absolute;bottom:8px;right:12px;}
+#battle-controls{flex-shrink:0;}
+#move-grid{
+  display:flex;gap:0;flex-wrap:wrap;
+  border-top:1px solid var(--panel);
+}
+.move-btn{
+  font-family:var(--font-body);font-size:18px;
+  background:var(--surface);color:var(--text);
+  border:1px solid var(--panel);padding:10px 8px;
+  flex:1;min-width:120px;cursor:pointer;text-align:left;
+  line-height:1.3;
+}
+.move-btn:active{background:var(--panel);}
+.move-btn strong{font-family:var(--font-ui);font-size:7px;display:block;color:var(--accent);margin-bottom:2px;}
+#shape-row{
+  display:flex;border-top:1px solid var(--panel);
+}
+.shape-btn{
+  flex:1;padding:10px 4px;
+  font-family:var(--font-body);font-size:18px;
+  background:var(--surface);color:var(--dim);
+  border:none;border-right:1px solid var(--panel);
+  cursor:pointer;text-align:center;
+}
+.shape-btn:last-child{border-right:none;}
+.shape-btn.selected{background:var(--panel);color:var(--accent);}
+.shape-btn:active{background:var(--panel);}
+#action-row{
+  display:flex;border-top:1px solid var(--panel);
+}
+#swing-btn{
+  flex:1;font-family:var(--font-ui);font-size:10px;
+  background:var(--accent);color:#0a1a0b;
+  border:none;padding:14px;cursor:pointer;
+}
+#swing-btn:active{background:#3da060;}
+#scorecard-btn{
+  width:56px;background:var(--surface);color:var(--text);
+  border:none;border-left:1px solid var(--panel);
+  font-size:20px;cursor:pointer;
+}
+
+/* ── SHOP ── */
+#screen-shop{flex-direction:column;}
+#shop-header{padding:12px 16px;background:var(--surface);border-bottom:2px solid var(--panel);flex-shrink:0;}
+#shop-title{font-size:9px;color:var(--gold);}
+#shop-cash-display{font-family:var(--font-body);font-size:18px;color:var(--gold);margin-top:4px;}
+#shop-tabs{display:flex;border-bottom:2px solid var(--panel);flex-shrink:0;}
+.shop-tab{
+  flex:1;padding:10px 4px;text-align:center;
+  font-family:var(--font-body);font-size:16px;color:var(--dim);
+  background:var(--surface);border:none;border-right:1px solid var(--panel);cursor:pointer;
+}
+.shop-tab:last-child{border-right:none;}
+.shop-tab.active{background:var(--panel);color:var(--accent);}
+#shop-list{flex:1;overflow-y:auto;padding:8px;}
+.shop-item{
+  display:flex;align-items:center;gap:10px;
+  padding:12px;margin-bottom:6px;
+  background:var(--surface);border:1px solid var(--panel);
+}
+.shop-item-info{flex:1;}
+.shop-item-name{font-size:7px;color:var(--text);margin-bottom:3px;}
+.shop-item-desc{font-family:var(--font-body);font-size:16px;color:var(--dim);}
+.shop-item-price{font-family:var(--font-body);font-size:18px;color:var(--gold);}
+.shop-buy-btn{font-size:7px;padding:8px 10px;min-width:60px;}
+.shop-buy-btn:disabled{background:var(--panel);color:var(--dim);box-shadow:none;cursor:default;}
+#shop-back{margin:8px 16px 16px;}
+
+/* ── CARDS ── */
+#screen-cards{flex-direction:column;}
+#cards-header{padding:12px 16px;background:var(--surface);border-bottom:2px solid var(--panel);flex-shrink:0;display:flex;justify-content:space-between;align-items:center;}
+#cards-title{font-size:9px;color:var(--text);}
+#cards-back{font-size:8px;padding:10px 14px;min-width:60px;}
+#cards-list{flex:1;overflow-y:auto;padding:8px;}
+.card-slot{
+  margin-bottom:8px;padding:12px;
+  border:2px solid var(--panel);
+  background:var(--surface);
+  cursor:pointer;transition:border-color 0.15s;
+}
+.card-slot.earned{border-color:var(--dim);}
+.card-slot.common.earned{border-color:#50c878;}
+.card-slot.uncommon.earned{border-color:#4488cc;}
+.card-slot.rare.earned{border-color:var(--gold);}
+.card-slot.locked{opacity:0.4;cursor:default;}
+.card-slot-top{display:flex;align-items:center;gap:10px;}
+.card-icon{font-size:32px;flex-shrink:0;}
+.card-meta{flex:1;}
+.card-rarity{font-size:6px;margin-bottom:3px;}
+.card-rarity.common{color:#50c878;}
+.card-rarity.uncommon{color:#4488cc;}
+.card-rarity.rare{color:var(--gold);}
+.card-name{font-size:8px;color:var(--text);margin-bottom:3px;}
+.card-bonus{font-family:var(--font-body);font-size:16px;color:var(--accent);}
+.card-body{display:none;margin-top:10px;border-top:1px solid var(--panel);padding-top:10px;}
+.card-body.open{display:block;}
+.card-bio{font-family:var(--font-body);font-size:16px;line-height:1.4;color:var(--dim);margin-bottom:8px;}
+.card-quote{font-family:var(--font-body);font-size:17px;line-height:1.4;color:var(--text);border-left:2px solid var(--accent);padding-left:8px;}
+
+/* ── PLAYER CARD ── */
+#screen-player{flex-direction:column;}
+#player-card-header{padding:12px 16px;background:var(--surface);border-bottom:2px solid var(--panel);flex-shrink:0;display:flex;justify-content:space-between;align-items:center;}
+#player-card-title{font-size:9px;color:var(--accent);}
+#player-card-back{font-size:8px;padding:10px 14px;min-width:60px;}
+#player-card-body{flex:1;overflow-y:auto;padding:16px;}
+#pc-icon-name{display:flex;align-items:center;gap:16px;margin-bottom:16px;}
+#pc-icon{font-size:56px;}
+.pc-name-col{}
+#pc-name{font-size:12px;color:var(--text);}
+#pc-level{font-family:var(--font-body);font-size:22px;color:var(--accent);margin-top:4px;}
+#pc-xp-bar-wrap{margin-bottom:16px;}
+#pc-xp-label{font-size:7px;color:var(--dim);margin-bottom:4px;}
+#pc-xp-bar-bg{background:var(--panel);height:10px;border:1px solid var(--surface);}
+#pc-xp-bar{height:100%;background:var(--accent);}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;}
+.stat-box{background:var(--surface);padding:10px;border:1px solid var(--panel);}
+.stat-label{font-size:6px;color:var(--dim);margin-bottom:4px;}
+.stat-val{font-size:12px;color:var(--text);}
+.stat-bar-bg{height:4px;background:var(--panel);margin-top:4px;}
+.stat-bar{height:4px;background:var(--accent);}
+#pc-badges{margin-bottom:16px;}
+#pc-badges-label{font-size:7px;color:var(--dim);margin-bottom:8px;}
+#pc-badge-row{display:flex;gap:8px;flex-wrap:wrap;}
+.badge-chip{
+  font-family:var(--font-body);font-size:16px;
+  padding:4px 10px;border:1px solid var(--dim);color:var(--text);
+}
+#pc-rivals-met{font-family:var(--font-body);font-size:18px;color:var(--dim);}
+
+/* ── OVERLAYS ── */
+.overlay{
+  display:none;position:absolute;top:0;left:0;
+  width:100%;height:100%;z-index:100;
+}
+.overlay.active{display:flex;}
+
+/* Dialogue */
+#overlay-dialogue{
+  background:rgba(0,0,0,0.85);
+  flex-direction:column;justify-content:flex-end;
+}
+#dialogue-box{
+  background:var(--surface);border-top:3px solid var(--accent);
+  padding:16px;min-height:160px;
+  display:flex;flex-direction:column;gap:10px;
+}
+#dialogue-speaker{display:flex;align-items:center;gap:8px;}
+#dialogue-icon{font-size:28px;}
+#dialogue-name{font-size:8px;color:var(--accent);}
+#dialogue-text{
+  font-family:var(--font-body);font-size:20px;line-height:1.5;
+  color:var(--text);flex:1;min-height:80px;
+}
+#dialogue-tap{font-size:12px;color:var(--dim);text-align:right;}
+
+/* Swing Meter */
+#overlay-swing{
+  flex-direction:column;align-items:center;justify-content:center;
+  background:rgba(0,0,0,0.92);gap:16px;
+}
+#swing-info{text-align:center;}
+#swing-club-label{font-size:8px;color:var(--accent);margin-bottom:4px;}
+#swing-shape-label{font-family:var(--font-body);font-size:18px;color:var(--dim);}
+#swing-canvas-wrap{position:relative;}
+#swing-canvas{display:block;}
+#swing-quality-flash{
+  position:absolute;top:0;left:0;width:100%;height:100%;
+  display:flex;align-items:center;justify-content:center;
+  pointer-events:none;opacity:0;
+  transition:opacity 0.08s;
+}
+#swing-quality-text{font-size:22px;text-shadow:0 0 12px currentColor;}
+#swing-action-btn{font-size:11px;padding:16px 48px;min-width:200px;}
+
+/* Putting */
+#overlay-putt{
+  flex-direction:column;align-items:center;justify-content:center;
+  background:rgba(0,0,0,0.92);gap:16px;
+}
+#putt-label{font-size:9px;color:var(--accent);}
+#putt-sub{font-family:var(--font-body);font-size:20px;color:var(--dim);}
+#putt-canvas{display:block;}
+#putt-tap-hint{font-family:var(--font-body);font-size:18px;color:var(--dim);}
+
+/* Level Up */
+#overlay-levelup{
+  flex-direction:column;align-items:center;justify-content:center;
+  background:rgba(0,0,0,0.92);gap:16px;padding:24px;
+  text-align:center;
+}
+#levelup-title{font-size:14px;color:var(--gold);text-shadow:0 0 16px var(--gold);}
+#levelup-num{font-size:32px;color:var(--accent);}
+#levelup-awards{font-family:var(--font-body);font-size:22px;color:var(--text);line-height:1.8;}
+#levelup-continue{margin-top:8px;}
+
+/* Card Unlock */
+#overlay-card{
+  flex-direction:column;align-items:center;justify-content:center;
+  background:rgba(0,0,0,0.95);padding:20px;
+  text-align:center;
+}
+#card-unlock-box{
+  width:100%;max-width:340px;padding:20px;
+  border:3px solid var(--dim);background:var(--surface);
+}
+#card-unlock-rarity{font-size:7px;margin-bottom:8px;}
+#card-unlock-title{font-size:8px;color:var(--text);margin-bottom:4px;}
+#card-unlock-name{font-size:10px;margin-bottom:12px;}
+#card-unlock-icon{font-size:56px;margin-bottom:12px;}
+#card-unlock-body{font-family:var(--font-body);font-size:18px;line-height:1.5;color:var(--dim);margin-bottom:12px;text-align:left;}
+#card-tap-hint{font-family:var(--font-body);font-size:18px;color:var(--dim);}
+
+/* Scorecard */
+#overlay-scorecard{
+  flex-direction:column;align-items:center;justify-content:center;
+  background:rgba(0,0,0,0.92);padding:20px;
+}
+#scorecard-box{
+  width:100%;max-width:360px;background:var(--surface);border:2px solid var(--dim);
+}
+#scorecard-title{
+  font-size:8px;color:var(--accent);padding:10px 12px;
+  border-bottom:1px solid var(--panel);
+}
+#scorecard-table{width:100%;border-collapse:collapse;}
+#scorecard-table th{
+  font-size:6px;padding:6px 8px;
+  background:var(--panel);color:var(--dim);text-align:center;
+}
+#scorecard-table td{
+  font-family:var(--font-body);font-size:18px;padding:5px 8px;
+  border-top:1px solid var(--panel);text-align:center;
+}
+.sc-win{color:var(--accent);}
+.sc-loss{color:var(--red);}
+.sc-halved{color:var(--dim);}
+#scorecard-close{margin:10px auto;display:block;font-size:8px;padding:10px 20px;}
+
+/* Toast */
+#overlay-toast{
+  align-items:flex-start;justify-content:flex-end;
+  flex-direction:column;
+  pointer-events:none;padding:0;
+  background:transparent;z-index:200;
+}
+#toast-msg{
+  background:var(--gold);color:#1a1000;
+  font-family:var(--font-body);font-size:18px;
+  padding:10px 14px;width:100%;
+  transform:translateY(100%);transition:transform 0.25s;
+}
+#toast-msg.visible{transform:translateY(0);}
+
+/* End scorecard full */
+#overlay-end-scorecard{
+  flex-direction:column;align-items:center;justify-content:center;
+  background:rgba(0,0,0,0.96);padding:20px;gap:12px;
+}
+#end-sc-title{font-size:9px;color:var(--accent);}
+#end-sc-result{font-size:11px;margin-bottom:4px;}
+#end-sc-awards{font-family:var(--font-body);font-size:20px;color:var(--gold);}
+#end-sc-table-wrap{width:100%;}
+#end-sc-table{width:100%;border-collapse:collapse;margin-top:8px;}
+#end-sc-table th{font-size:6px;padding:5px 8px;background:var(--panel);color:var(--dim);text-align:center;}
+#end-sc-table td{font-family:var(--font-body);font-size:18px;padding:5px 8px;border-top:1px solid var(--panel);text-align:center;}
+#end-sc-continue{margin-top:4px;}
+</style>
+</head>
+<body>
+<div id="game">
+
+<!-- ── SCREENS ── -->
+<div id="screen-title" class="screen active">
+  <div class="title-logo">
+    <h1>FAIRWAY<br>DREAMS</h1>
+    <p>Long Island Golf RPG</p>
+  </div>
+  <div class="title-scene">⛳🌿🏌️</div>
+  <div class="title-badges">Muni → County → State<br>Find your game.</div>
+  <button id="btn-new-game" class="btn">NEW GAME</button>
+  <button id="btn-continue" class="btn btn-secondary" style="display:none">CONTINUE</button>
+</div>
+
+<div id="screen-name" class="screen">
+  <h2>ENTER YOUR NAME</h2>
+  <input id="name-input" type="text" maxlength="10" placeholder="YOUR NAME" autocomplete="off" autocorrect="off" spellcheck="false">
+  <div style="font-family:var(--font-body);font-size:16px;color:var(--dim);text-align:center;">Max 10 characters</div>
+  <button id="btn-name-confirm" class="btn">LET'S GO</button>
+</div>
+
+<div id="screen-map" class="screen">
+  <div id="map-header">
+    <div id="map-title">FAIRWAY DREAMS</div>
+    <div id="map-buttons">
+      <button id="btn-cards" class="btn btn-secondary btn-sm">🃏 CARDS</button>
+      <button id="btn-me" class="btn btn-secondary btn-sm">👤 ME</button>
+      <button id="btn-shop" class="btn btn-secondary btn-sm">🏪 SHOP</button>
+    </div>
+  </div>
+  <canvas id="map-canvas" width="390" height="420"></canvas>
+  <div id="map-footer">
+    <div id="map-cash"></div>
+    <div id="map-level"></div>
+  </div>
+</div>
+
+<div id="screen-location" class="screen">
+  <div id="loc-header">
+    <div id="loc-name"></div>
+    <div id="loc-circuit"></div>
+  </div>
+  <div id="loc-rival-info">
+    <div id="loc-rival-icon"></div>
+    <div class="loc-rival-details">
+      <div id="loc-rival-name"></div>
+      <div id="loc-rival-style"></div>
+      <div id="loc-rival-record"></div>
+    </div>
+  </div>
+  <div id="loc-frankie-quote"></div>
+  <div id="loc-conditions">
+    <div>Weather: <span id="loc-weather"></span></div>
+    <div>Greens: <span id="loc-greens"></span></div>
+  </div>
+  <div id="loc-actions">
+    <button id="btn-enter" class="btn">ENTER TOURNAMENT</button>
+    <button id="btn-loc-back" class="btn btn-secondary">BACK</button>
+  </div>
+</div>
+
+<div id="screen-encounter" class="screen">
+  <div id="enc-rival-display"></div>
+  <div id="enc-rival-name"></div>
+  <div id="enc-actions">
+    <button id="btn-accept" class="btn">ACCEPT CHALLENGE</button>
+    <button id="btn-not-today" class="btn btn-secondary">NOT TODAY</button>
+  </div>
+</div>
+
+<div id="screen-battle" class="screen">
+  <div id="battle-top">
+    <div id="rival-row">
+      <div id="rival-icon-sm"></div>
+      <div class="rival-info-col">
+        <div id="rival-name-battle"></div>
+        <div class="hp-bar-wrap"><div id="rival-hp-bar" class="hp-bar"></div><span class="hp-label" id="rival-hp-label"></span></div>
+      </div>
+      <div id="streak-badge">🔥 ON FIRE</div>
+    </div>
+    <div id="hole-info-row" style="font-family:var(--font-body);font-size:16px;color:var(--dim);display:flex;gap:12px;flex-wrap:wrap;"></div>
+  </div>
+  <canvas id="battle-canvas" width="390" height="220"></canvas>
+  <div id="player-row">
+    <div id="player-battle-name"></div>
+    <div class="hp-bar-wrap"><div id="player-hp-bar" class="hp-bar"></div><span class="hp-label" id="player-hp-label"></span></div>
+    <div id="momentum-row">
+      <span id="momentum-label">MOMENTUM</span>
+      <div id="momentum-pips"></div>
+    </div>
+  </div>
+  <div id="msg-box" role="button" tabindex="0">
+    <span id="msg-text"></span>
+    <span id="msg-tap" style="display:none">▼ TAP</span>
+  </div>
+  <div id="battle-controls">
+    <div id="move-grid"></div>
+    <div id="shape-row" style="display:none">
+      <button class="shape-btn" id="shape-draw">🔴 DRAW<br><span style="font-size:14px">+5% dist</span></button>
+      <button class="shape-btn" id="shape-straight">⚪ STRAIGHT<br><span style="font-size:14px">standard</span></button>
+      <button class="shape-btn" id="shape-fade">🔵 FADE<br><span style="font-size:14px">-5% dist</span></button>
+    </div>
+    <div id="action-row" style="display:none">
+      <button id="swing-btn">SWING</button>
+      <button id="scorecard-btn" title="Scorecard">📋</button>
+    </div>
+  </div>
+</div>
+
+<div id="screen-shop" class="screen">
+  <div id="shop-header">
+    <div id="shop-title">PRO SHOP</div>
+    <div id="shop-cash-display"></div>
+  </div>
+  <div id="shop-tabs">
+    <button class="shop-tab active" data-tab="equip">Equipment</button>
+    <button class="shop-tab" data-tab="coaching">Coaching</button>
+    <button class="shop-tab" data-tab="skills">Skills</button>
+    <button class="shop-tab" data-tab="practice">Practice</button>
+  </div>
+  <div id="shop-list"></div>
+  <button id="shop-back" class="btn btn-secondary">BACK TO MAP</button>
+</div>
+
+<div id="screen-cards" class="screen">
+  <div id="cards-header">
+    <div id="cards-title">RIVAL CARDS</div>
+    <button id="cards-back" class="btn btn-secondary btn-sm">BACK</button>
+  </div>
+  <div id="cards-list"></div>
+</div>
+
+<div id="screen-player" class="screen">
+  <div id="player-card-header">
+    <div id="player-card-title">PLAYER CARD</div>
+    <button id="player-card-back" class="btn btn-secondary btn-sm">BACK</button>
+  </div>
+  <div id="player-card-body">
+    <div id="pc-icon-name">
+      <div id="pc-icon">🏌️</div>
+      <div class="pc-name-col">
+        <div id="pc-name"></div>
+        <div id="pc-level"></div>
+      </div>
+    </div>
+    <div id="pc-xp-bar-wrap">
+      <div id="pc-xp-label"></div>
+      <div id="pc-xp-bar-bg"><div id="pc-xp-bar"></div></div>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-box">
+        <div class="stat-label">POWER</div>
+        <div class="stat-val" id="pc-power"></div>
+        <div class="stat-bar-bg"><div class="stat-bar" id="pc-power-bar"></div></div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">ACCURACY</div>
+        <div class="stat-val" id="pc-accuracy"></div>
+        <div class="stat-bar-bg"><div class="stat-bar" id="pc-accuracy-bar"></div></div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">SHORT GAME</div>
+        <div class="stat-val" id="pc-shortGame"></div>
+        <div class="stat-bar-bg"><div class="stat-bar" id="pc-shortgame-bar"></div></div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">MENTAL</div>
+        <div class="stat-val" id="pc-mental"></div>
+        <div class="stat-bar-bg"><div class="stat-bar" id="pc-mental-bar"></div></div>
+      </div>
+    </div>
+    <div id="pc-badges">
+      <div id="pc-badges-label">BADGES</div>
+      <div id="pc-badge-row"></div>
+    </div>
+    <div id="pc-rivals-met"></div>
+  </div>
+</div>
+
+<!-- ── OVERLAYS ── -->
+<div id="overlay-dialogue" class="overlay">
+  <div id="dialogue-box">
+    <div id="dialogue-speaker">
+      <span id="dialogue-icon"></span>
+      <span id="dialogue-name"></span>
+    </div>
+    <div id="dialogue-text"></div>
+    <div id="dialogue-tap">▼ TAP TO CONTINUE</div>
+  </div>
+</div>
+
+<div id="overlay-swing" class="overlay">
+  <div id="swing-info">
+    <div id="swing-club-label"></div>
+    <div id="swing-shape-label"></div>
+  </div>
+  <div id="swing-canvas-wrap">
+    <canvas id="swing-canvas" width="360" height="100"></canvas>
+    <div id="swing-quality-flash"><span id="swing-quality-text"></span></div>
+  </div>
+  <button id="swing-action-btn" class="btn">SWING</button>
+</div>
+
+<div id="overlay-putt" class="overlay">
+  <div id="putt-label">PUTTING</div>
+  <div id="putt-sub"></div>
+  <canvas id="putt-canvas" width="220" height="220"></canvas>
+  <div id="putt-tap-hint">TAP TO AIM</div>
+</div>
+
+<div id="overlay-levelup" class="overlay">
+  <div id="levelup-title">LEVEL UP!</div>
+  <div id="levelup-num"></div>
+  <div id="levelup-awards"></div>
+  <button id="levelup-continue" class="btn btn-gold">CONTINUE</button>
+</div>
+
+<div id="overlay-card" class="overlay">
+  <div id="card-unlock-box">
+    <div id="card-unlock-rarity"></div>
+    <div id="card-unlock-title">RIVAL CARD UNLOCKED</div>
+    <div id="card-unlock-name"></div>
+    <div id="card-unlock-icon"></div>
+    <div id="card-unlock-body"></div>
+    <div id="card-tap-hint">▼ TAP TO CONTINUE</div>
+  </div>
+</div>
+
+<div id="overlay-scorecard" class="overlay">
+  <div id="scorecard-box">
+    <div id="scorecard-title">MATCH SCORECARD</div>
+    <table id="scorecard-table">
+      <thead><tr><th>HOLE</th><th>PAR</th><th>YOU</th><th>RIVAL</th><th>RESULT</th></tr></thead>
+      <tbody id="scorecard-body"></tbody>
+    </table>
+    <div style="padding:8px 12px;font-family:var(--font-body);font-size:17px;color:var(--dim)" id="scorecard-match-status"></div>
+    <button id="scorecard-close" class="btn btn-secondary btn-sm">CLOSE</button>
+  </div>
+</div>
+
+<div id="overlay-end-scorecard" class="overlay">
+  <div id="end-sc-title">MATCH COMPLETE</div>
+  <div id="end-sc-result"></div>
+  <div id="end-sc-awards"></div>
+  <div id="end-sc-table-wrap">
+    <table id="end-sc-table">
+      <thead><tr><th>HOLE</th><th>PAR</th><th>YOU</th><th>RIVAL</th><th>RESULT</th></tr></thead>
+      <tbody id="end-sc-body"></tbody>
+    </table>
+  </div>
+  <button id="end-sc-continue" class="btn btn-gold">CONTINUE</button>
+</div>
+
+<div id="overlay-toast" class="overlay">
+  <div id="toast-msg"></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════════════════════════
+var CONFIG = {
+  SAVE_KEY: 'fd_save_v2',
+  MAX_LEVEL: 14,
+  HP_START: 100,
+  HP_WIN_HOLE: 20,
+  HP_LOSE_HOLE: -20,
+  MAX_NAME_LEN: 10,
+  MAX_STROKES: 8,
+  PUTT_RANGE: 30,
+  TOAST_DURATION: 2500,
+  TYPE_SPEED: 22,
+  MSG_SPEED: 18,
+  AUTO_ADVANCE: 3500,
+  HP_BIRDIE: 10,
+  HP_EAGLE: 20,
+  HP_PER_OVER: -15
+};
+
+var XP_PER_LEVEL = [0,100,200,350,500,700,950,1250,1600,2000,2500,3100,3800,4600,99999];
+
+// ═══════════════════════════════════════════════════════════════
+// DATA — RIVALS
+// ═══════════════════════════════════════════════════════════════
+var RIVALS_DATA = {
+  donnie: {
+    id: 'donnie', name: 'Donnie Baseball', icon: '🧔🏼‍♂️',
+    style: 'Bomber', hometown: 'Bay Ridge, Brooklyn',
+    skill: 38, tier: 1, circuit: 'muni',
+    color: '#e87040',
+    bio: 'Twelve years in the minors as a closer. Tommy John surgery ended it. Picked up a golf club the same week he got the news. His swing looks like he is still trying to throw a cut fastball. It works anyway.',
+    intro: [
+      'So you are the one Frankie has been talking about. Twelve years on the mound, I never blinked once. You think a golf course is going to rattle me?',
+      'Donnie Baseball. I threw 97. Now I drive it 310. Same arm, different sport. You ready?'
+    ],
+    preRound: [
+      'You know what the mound taught me? Pressure is opportunity.',
+      'I used to throw 97. Now I drive it 310. Same arm, different sport.',
+      'One bad swing and the hole is over. I learned that from a bad inning.',
+      'Baseball taught me patience. Golf is testing it.',
+      'Pressure is just another pitch. Same mechanics out here.'
+    ],
+    postWin: 'Donnie tips his cap. Good round. You earned it.',
+    postLoss: 'You cannot shake it off between innings out here. You carry every shot. That is why I love it.',
+    card: { rarity: 'common', bonus: { power: 8 }, flavour: 'The mound teaches you one thing: trust your mechanics.' },
+    frankieGossip: [
+      'Donnie Baseball. Played twelve years as a closer. His swing looks like a pitch. But he drives it 310.',
+      'He is cocky. But he can back it up. First two holes he will try to intimidate you. Do not let him.'
+    ]
+  },
+  smitty: {
+    id: 'smitty', name: 'Smitty', icon: '👱🏼‍♂️',
+    style: 'Grinder', hometown: 'Massapequa, Long Island',
+    skill: 42, tier: 1, circuit: 'muni',
+    color: '#4488cc',
+    bio: 'Jason Smith — Jsmits247 online. Has been live streaming since he was 16. Built a following playing every golf sim ever made. One day he booked a real tee time and shot 103. Immediately went live. Chat went wild. Got hooked. Now a 6 handicap with a GoPro on his bag and 200k people watching every round.',
+    intro: [
+      'Chat, this is the person Frankie DeLuca has been hyping. Let us see if they are real. Going live in three, two…',
+      'Smitty247. 200k watching right now. No pressure.'
+    ],
+    preRound: [
+      'Chat is going CRAZY right now. They think I birdie the first three.',
+      'Bro I have played this exact layout in TGC Tours like 400 times.',
+      'No cap you are actually kind of good. Chat said you were free.',
+      'POV: Smitty is about to go absolutely nuclear on this back nine.',
+      'I stream to 200k people. You are basically two spectators to me.'
+    ],
+    postWin: 'LETS GOOO! Chat called it! GG no re.',
+    postLoss: 'L in the chat. We move. Long VOD review tonight.',
+    card: { rarity: 'common', bonus: { accuracy: 8 }, flavour: 'Read the course like you read the meta. Adapt or get clipped.' },
+    frankieGossip: [
+      'That kid streams every round live. Two hundred thousand people watching. Plays it up for the camera.',
+      'His iron game is surprisingly sharp for a guy who learned from YouTube. Stay focused. Do not let the bit distract you.'
+    ]
+  },
+  ricky: {
+    id: 'ricky', name: 'Ricky the Rocket', icon: '🧔🏽‍♂️',
+    style: 'Bomber', hometown: 'Hicksville, Long Island',
+    skill: 50, tier: 2, circuit: 'muni',
+    color: '#cc3344',
+    bio: 'Ricky Vasquez has the longest average drive on the Long Island amateur circuit. He has had this distinction for four years running and brings it up constantly. His short game is a separate conversation.',
+    intro: [
+      'The Rocket is fueled. Ricky windmills his arm once and points down the first fairway.',
+      'I drive it 330 on a good day. Today feels like a good day.'
+    ],
+    preRound: [
+      'I am going to hit this driver so far they will need a different zip code.',
+      'Watch this. Just watch.',
+      'Power is a skill. People forget that. I do not.',
+      'The Rocket is fueled up today. You have been warned.',
+      'I drive it 330 on a good day. Today feels like a good day.'
+    ],
+    postWin: 'Good game. You survived my driver AND my putter. That is rare.',
+    postLoss: 'Ricky is already thinking about the drive on 7. 341 yards.',
+    card: { rarity: 'uncommon', bonus: { power: 12 }, flavour: 'Hit it hard. Worry about where it went later.' },
+    frankieGossip: [
+      'Ricky the Rocket. Longest drive on the circuit four years running. He will remind you.',
+      'He is beatable. His wedge game leaks. Get close on the par 3s and you can take him.'
+    ]
+  },
+  ryan: {
+    id: 'ryan', name: 'Ryan Ortiz', icon: '👨🏼',
+    style: 'Wizard', hometown: 'Garden City, Long Island',
+    skill: 58, tier: 1, circuit: 'county',
+    color: '#44aacc',
+    bio: 'Fifteen years in finance. Retired at 41. Now he plays golf six days a week and treats every round like a deal he intends to close. His short game is the best on the county circuit and he knows it.',
+    intro: [
+      'Ryan Ortiz. He nods. I have been watching your numbers. Solid fundamentals. Weak under pressure.',
+      'The short game is where this gets decided. It always is.'
+    ],
+    preRound: [
+      'I used to close seven-figure deals. This is just a golf shot.',
+      'Around the greens? That is where I make my money.',
+      'I have more data on this course than you have played rounds.',
+      'Patience. Precision. That is the formula.',
+      'You are going to be fine. He says it like a warning.'
+    ],
+    postWin: 'Clean execution. He signs his card.',
+    postLoss: 'Short game wins tournaments. You will figure that out.',
+    card: { rarity: 'rare', bonus: { shortGame: 12 }, flavour: 'The scoring zone is where rounds are won. Live there.' },
+    frankieGossip: [
+      'Ryan Ortiz. Finance guy. Retired early. Now he plays six days a week.',
+      'Best short game on the county circuit. Around the greens he is clinical. Stay out of the rough.'
+    ]
+  },
+  lars: {
+    id: 'lars', name: 'Chef Lars', icon: '👨🏼‍🍳',
+    style: 'Wizard', hometown: 'Huntington, Long Island',
+    skill: 62, tier: 2, circuit: 'county',
+    color: '#cc8822',
+    bio: 'Lars Eriksen runs a pizza restaurant in Huntington. Gets on the course between lunch and dinner service. Short tempered in the way only kitchen veterans are. His short game is terrifying.',
+    intro: [
+      'Lars wipes his hands on the towel at his hip. Force of habit. I have fifteen minutes before the dinner rush.',
+      'Every hole is a dish. Execute under heat. Same as the kitchen.'
+    ],
+    preRound: [
+      'Your swing is like a soggy crust. No structure. No snap.',
+      'I have been on my feet since 5am. I will still beat you.',
+      'Lars wipes his hands on a towel at his hip. Force of habit.',
+      'Every hole is a dish. Right ingredients, right technique.',
+      'I have fifteen minutes before the dinner rush. Let us make this quick.'
+    ],
+    postWin: 'That round was well done. He is already calling the kitchen.',
+    postLoss: 'You got me today. Come eat at the restaurant first.',
+    card: { rarity: 'uncommon', bonus: { shortGame: 12 }, flavour: 'Touch is everything. In the kitchen and on the course.' },
+    frankieGossip: [
+      'Lars Eriksen. Runs a pizza place in Huntington. Always playing between shifts.',
+      'He is cranky but his wedge game is razor sharp. Do not get cute near the greens.'
+    ]
+  },
+  bigsmoke: {
+    id: 'bigsmoke', name: 'Big Smoke', icon: '🧔🏻‍♂️',
+    style: 'Wizard', hometown: 'Freeport, Long Island',
+    skill: 65, tier: 3, circuit: 'county',
+    color: '#aa66cc',
+    bio: 'Shane Patrick — everybody calls him Big Smoke. Plays guitar in three bands. Has a pre-round ritual nobody fully understands. His best golf happens when he is fully relaxed. Approaches every shot like a groove — slow, deliberate, in the pocket.',
+    intro: [
+      'Big Smoke in the building. He exhales slowly and looks at the course like he is reading sheet music.',
+      'Every shot is a verse. Every round is a song. Let us see what key you play in.'
+    ],
+    preRound: [
+      'Big Smoke is in the building. He exhales slowly.',
+      'He squints at the fairway like he is seeing it for the first time.',
+      'Backswing is the verse. Downswing is the chorus. Impact is the drop.',
+      'I am not nervous. I am calibrated.',
+      'Golf is just music with a scorecard. Today the playlist is immaculate.'
+    ],
+    postWin: 'Smooth round. You were in the pocket but I was in a different pocket entirely.',
+    postLoss: 'I lost the groove on the back nine. No stress.',
+    card: { rarity: 'uncommon', bonus: { mental: 10 }, flavour: 'The groove is everything. Find yours. Then stay there a while.' },
+    frankieGossip: [
+      'Big Smoke. Musician. Three bands. Has some kind of pre-shot ritual I have never fully understood.',
+      'He plays better when he is loose. Try to speed up his tempo. It throws him off.'
+    ]
+  },
+  dean: {
+    id: 'dean', name: 'Dean Buckshot', icon: '👲🏻',
+    style: 'Grinder', hometown: 'Port Washington, Long Island',
+    skill: 72, tier: 4, circuit: 'county',
+    color: '#66aa44',
+    bio: 'Dean Buckshot has closed more real estate deals on a golf course than most brokers close in an office. Nobody knows where the nickname came from. Nobody asks twice.',
+    intro: [
+      'Dean Buckshot. He hands you a card. Just his name and a phone number. No title. You ever think about real estate?',
+      'I closed a deal on a nine-hole course while playing it. Finished the round first. Priorities.'
+    ],
+    preRound: [
+      'So tell me — what do you think this course is worth? Ballpark.',
+      'Good weather today. Good weather closes deals. And rounds.',
+      'Every hole is a negotiation. And I always know my number.',
+      'I closed a four million dollar deal on this back nine last spring.',
+      'The nickname? You would need to buy me dinner first.'
+    ],
+    postWin: 'Clean from start to finish. He hands you a business card.',
+    postLoss: 'Come eat at the restaurant first. Then we talk rematch.',
+    card: { rarity: 'uncommon', bonus: { mental: 12 }, flavour: 'Know your number before you tee off. Know your exit before you sign.' },
+    frankieGossip: [
+      'Dean Buckshot. Real estate. Closed a deal on the ninth hole last spring mid-round.',
+      'He grinds. No flash. Just keeps making pars until you make a mistake. Do not make a mistake.'
+    ]
+  },
+  artist: {
+    id: 'artist', name: 'The Artist', icon: '🧑🏽‍🎨',
+    style: 'Iceman', hometown: 'Williamsburg, Brooklyn',
+    skill: 75, tier: 1, circuit: 'state',
+    color: '#cc4488',
+    bio: 'Nobody uses his real name anymore. He treats every round like an installation. Walks slower than anyone on the circuit. Completely unbothered by pace of play. His swing is self-taught and technically wrong in at least four ways. Shoots 68.',
+    intro: [
+      'The Artist does not say anything at first. He just looks at the course for a long moment. Then looks at you.',
+      'Every hole is a canvas. You are a collaborator whether you want to be or not.'
+    ],
+    preRound: [
+      'He crouches behind the ball and studies the fairway like a canvas.',
+      'Complete stillness. Then the swing. Unsettlingly calm.',
+      'He traces the ball flight in the air before swinging.',
+      'One practice swing. Exactly one. Then steps in.'
+    ],
+    postWin: 'Good composition today.',
+    postLoss: 'Every artist has a rough draft.',
+    card: { rarity: 'rare', bonus: { accuracy: 15 }, flavour: 'Shape is language. Learn to speak it.' },
+    frankieGossip: [
+      'The Artist. Nobody uses his real name. Williamsburg kid. Walks slower than anyone on the circuit.',
+      'His swing is technically a disaster and he shoots 68. Do not try to figure it out. Just play your game.'
+    ]
+  },
+  jimmy: {
+    id: 'jimmy', name: 'Jimmy Nicknames', icon: '🧔🏻‍♂️',
+    style: 'Bomber', hometown: 'Bethpage, Long Island',
+    skill: 82, tier: 2, circuit: 'state',
+    color: '#44cc88',
+    bio: 'Nobody calls him James. He has at least twelve nicknames — The Professor, Captain Chaos, The Sniper, The Hammer, The Closer, Jimmy Clutch. He answers to all of them. Played D1 soccer at Hofstra. Knees gave out. Picked up golf. Within two years he was beating the golf team.',
+    intro: [
+      'Jimmy Nicknames is in the building! He spreads his arms wide. The Hammer.',
+      'I played D1 soccer until my knees gave out. Then I picked up a 7-iron. Within two years I was beating the golf team.'
+    ],
+    preRound: [
+      'The Professor is IN today. Take notes.',
+      'Call me The Hammer today. I am feeling it.',
+      'Captain Chaos reports for duty.',
+      'The Sniper has the range dialed in. You have been spotted.',
+      'Jimmy Clutch shows up when it matters. It matters now.'
+    ],
+    postWin: 'The Professor grades on a curve. You got a B.',
+    postLoss: 'Even Captain Chaos has bad days.',
+    card: { rarity: 'rare', bonus: { power: 5, accuracy: 5, shortGame: 5, mental: 5 }, flavour: 'Whatever they call you — go be that guy on every hole.' },
+    frankieGossip: [
+      'Jimmy Nicknames. Twelve nicknames. Answers to all of them. D1 soccer until his knees went.',
+      'He is dangerous because he has no weak spots. You have to outplay him everywhere. Stay sharp.'
+    ]
+  },
+  garth: {
+    id: 'garth', name: 'Garth Brux', icon: '👮🏻‍♂️',
+    style: 'Iceman', hometown: 'Massapequa Park, Long Island',
+    skill: 90, tier: 3, circuit: 'state',
+    color: '#aaaaaa',
+    bio: 'Thirty-one years NYPD. Retired as Deputy Commissioner. Has a handicap index of 2.1 that he will tell you about unprompted. Plays every shot like filing a report — methodical, joyless, and technically correct.',
+    intro: [
+      'Garth Brux. Retired Deputy Commissioner. I assume you know the Rules of Golf. The actual rules.',
+      'Thirty-one years on the job. This is not pressure. This is a Tuesday.'
+    ],
+    preRound: [
+      'Let me ask you something. Do you know the Rules of Golf? The actual rules?',
+      'I have been playing this course since 1987.',
+      'Thirty-one years on the job. You learn patience. You learn procedure.',
+      'I am going to need you to slow down your pre-shot routine.',
+      'No disrespect. But I have seen your swing and I have some concerns.'
+    ],
+    postWin: 'Clean round. By the book. You have potential.',
+    postLoss: 'Good round. Long pause. I will review the tape tonight.',
+    card: { rarity: 'rare', bonus: { mental: 15 }, flavour: 'Procedure exists for a reason. Follow it and the results take care of themselves.' },
+    frankieGossip: [
+      'Garth Brux. Thirty-one years NYPD. Retired Deputy Commissioner. Two handicap.',
+      'He is the Commissioner Cup final boss. Clinical, methodical, completely unbothered. You will need everything you have learned.'
+    ]
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════
+// DATA — LOCATIONS
+// ═══════════════════════════════════════════════════════════════
+var LOCATIONS = {
+  meadowbrook: {
+    id: 'meadowbrook', name: 'Meadowbrook Muni', circuit: 'muni',
+    rivalId: 'donnie', prize: 200, minLevel: 1,
+    totalHoles: 3, toWin: 2,
+    parValues: [4,3,5], holeYards: [380,145,520],
+    description: 'A classic municipal track with wide fairways.',
+    pin: {x:158, y:248}
+  },
+  parkview: {
+    id: 'parkview', name: 'Parkview Classic', circuit: 'muni',
+    rivalId: 'smitty', prize: 350, minLevel: 2,
+    totalHoles: 3, toWin: 2,
+    parValues: [4,4,3], holeYards: [410,395,175],
+    description: 'Tree-lined fairways. Accuracy matters here.',
+    pin: {x:210, y:228}
+  },
+  munichamp: {
+    id: 'munichamp', name: 'Muni Championship', circuit: 'muni',
+    rivalId: 'ricky', prize: 750, minLevel: 3,
+    totalHoles: 3, toWin: 2,
+    parValues: [5,4,4], holeYards: [550,440,385],
+    description: 'The Muni Circuit finale. Win this to go County.',
+    pin: {x:262, y:210},
+    isTrophy: true
+  },
+  nassau: {
+    id: 'nassau', name: 'Nassau County Open', circuit: 'county',
+    rivalId: 'ryan', prize: 1000, minLevel: 4,
+    totalHoles: 6, toWin: 4,
+    parValues: [4,3,4,5,4,3], holeYards: [395,155,420,510,380,175],
+    description: 'County circuit opens here. Tight greens.',
+    pin: {x:195, y:185}
+  },
+  liclassic: {
+    id: 'liclassic', name: 'Long Island Classic', circuit: 'county',
+    rivalId: 'lars', prize: 1800, minLevel: 5,
+    totalHoles: 6, toWin: 4,
+    parValues: [4,5,3,4,4,5], holeYards: [430,540,165,400,415,495],
+    description: 'Links-style track. Wind plays a factor.',
+    pin: {x:240, y:175}
+  },
+  groove: {
+    id: 'groove', name: 'The Groove Session', circuit: 'county',
+    rivalId: 'bigsmoke', prize: 2200, minLevel: 6,
+    totalHoles: 6, toWin: 4,
+    parValues: [4,4,3,5,4,4], holeYards: [385,410,170,530,400,420],
+    description: 'Laid-back layout, deceptively tricky.',
+    pin: {x:285, y:168}
+  },
+  countychamp: {
+    id: 'countychamp', name: 'County Championship', circuit: 'county',
+    rivalId: 'dean', prize: 3500, minLevel: 8,
+    totalHoles: 6, toWin: 4,
+    parValues: [5,4,3,4,4,5], holeYards: [520,445,185,415,390,510],
+    description: 'County finale. Beat Buckshot to reach State.',
+    pin: {x:318, y:162},
+    isTrophy: true
+  },
+  empirestate: {
+    id: 'empirestate', name: 'Empire State Am', circuit: 'state',
+    rivalId: 'artist', prize: 5000, minLevel: 9,
+    totalHoles: 9, toWin: 5,
+    parValues: [4,3,5,4,4,3,5,4,4], holeYards: [410,160,540,395,425,180,510,420,440],
+    description: 'State circuit begins. The Artist awaits.',
+    pin: {x:210, y:148}
+  },
+  nystate: {
+    id: 'nystate', name: 'NY State Championship', circuit: 'state',
+    rivalId: 'jimmy', prize: 10000, minLevel: 11,
+    totalHoles: 9, toWin: 5,
+    parValues: [4,5,3,4,4,5,3,4,4], holeYards: [430,555,170,420,415,525,175,445,460],
+    description: 'One match from the Commissioner Cup.',
+    pin: {x:268, y:140},
+    isTrophy: true
+  },
+  commissioner: {
+    id: 'commissioner', name: 'Commissioner Cup', circuit: 'state',
+    rivalId: 'garth', prize: 15000, minLevel: 13,
+    totalHoles: 9, toWin: 5,
+    parValues: [5,4,3,4,4,5,4,3,4], holeYards: [545,435,175,420,415,540,430,165,460],
+    description: 'The final match. Garth Brux. Everything on the line.',
+    pin: {x:315, y:132},
+    isTrophy: true, isFinal: true
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════
+// DATA — SHOP
+// ═══════════════════════════════════════════════════════════════
+var SHOP_ITEMS = {
+  equip: [
+    {id:'prodriver',   name:'Pro Driver',      price:400, bonus:{power:15},      desc:'Power +15%',       tab:'equip'},
+    {id:'forgedirons', name:'Forged Irons',    price:350, bonus:{accuracy:12},   desc:'Accuracy +12%',    tab:'equip'},
+    {id:'wedgeset',    name:'Wedge Set',       price:300, bonus:{shortGame:12},  desc:'Short Game +12%',  tab:'equip'},
+    {id:'graphite',    name:'Graphite Shaft',  price:200, bonus:{power:8},       desc:'Power +8%',        tab:'equip'}
+  ],
+  coaching: [
+    {id:'propack',     name:'Pro Lesson Pack', price:500, bonus:{accuracy:8, mental:5},  desc:'Accuracy +8, Mental +5',  tab:'coaching'},
+    {id:'mentalgame',  name:'Mental Game Course', price:400, bonus:{mental:12},          desc:'Mental +12',              tab:'coaching'},
+    {id:'gym',         name:'Gym Membership',  price:300, bonus:{power:10, accuracy:5},  desc:'Power +10, Accuracy +5',  tab:'coaching'}
+  ],
+  skills: [
+    {id:'ironskill',   name:'Iron Striking',   price:150, bonus:{accuracy:6},   desc:'Accuracy +6',      tab:'skills', repeatable:true},
+    {id:'sgmaster',    name:'Short Game Master',price:200,bonus:{shortGame:8},  desc:'Short Game +8',    tab:'skills', repeatable:true},
+    {id:'drivepow',    name:'Driving Power',   price:150, bonus:{power:7},      desc:'Power +7',         tab:'skills', repeatable:true}
+  ],
+  practice: [
+    {id:'drivingrange', name:'Driving Range',     price:100, bonus:{power:4},      desc:'Power +4',         tab:'practice', repeatable:true},
+    {id:'ironplay',     name:'Iron Play Session', price:100, bonus:{accuracy:4},   desc:'Accuracy +4',      tab:'practice', repeatable:true},
+    {id:'chipping',     name:'Chipping Clinic',   price:120, bonus:{shortGame:5},  desc:'Short Game +5',    tab:'practice', repeatable:true},
+    {id:'puttinglab',   name:'Putting Lab',        price:120, bonus:{shortGame:5},  desc:'Short Game +5',    tab:'practice', repeatable:true},
+    {id:'frankiesesh',  name:'Frankie Session',    price:150, bonus:{mental:6},     desc:'Mental +6',        tab:'practice', repeatable:true},
+    {id:'fullday',      name:'Full Day Session',   price:300, bonus:{power:3, accuracy:3, shortGame:3, mental:3}, desc:'All Stats +3', tab:'practice', repeatable:true}
+  ]
+};
+
+// ═══════════════════════════════════════════════════════════════
+// DATA — FRANKIE
+// ═══════════════════════════════════════════════════════════════
+var FRANKIE = {
+  id: 'frankie', name: 'Frankie DeLuca', icon: '🧓🏽',
+  intro: [
+    'Kid, I am Frankie DeLuca. Won the LI Am three times. Now I run the pro shop. And apparently I am your caddie.',
+    'I have seen a thousand players come through here. Most of them thought they were ready. They were not.',
+    'But something about your swing tells me you might be different. Do not make me regret this.'
+  ],
+  levelLines: [
+    'I have been around this game forty years. You swing like you learned from YouTube. But something happens when you hit it — so I am going to stick around.',
+    'I have fifty bucks riding on you today. Do not make me look stupid.',
+    'You are an anomaly. Figure out why, and we are talking about something real.',
+    'I told Sal at the pro shop you would be playing county events by spring. He laughed. I do not forget.',
+    'I won the LI Am in 1989, 1992, and 1995. I am starting to think caddying for you might end up on the list too.',
+    'I have more than fifty bucks riding on you now. And for the first time in a long time I am not worried.'
+  ],
+  quips: {
+    win: [
+      'That is what I am talking about.',
+      'Keep that up and I will double my bet.',
+      'Beautiful. Textbook.',
+      'Now we are playing golf.',
+      'That is the shot I knew you had.'
+    ],
+    loss: [
+      'Shake it off. Next hole.',
+      'That is fixable. Let us move.',
+      'Not ideal. Not terminal.',
+      'We recover. It is match play.',
+      'One hole. Forget it.'
+    ],
+    halved: [
+      'Push. We take it.',
+      'Good fight on that one.',
+      'You held your ground.',
+      'Split. Move on.',
+      'A halve is not a loss.'
+    ]
+  }
+};
+
+var RANDOM_EVENTS = [
+  {id:'gallery', name:'Gallery Incident', desc:'The rival is distracted by a spectator.', effect:'rival_penalty', val:1},
+  {id:'equipment', name:'Equipment Malfunction', desc:'Something is off with your grip today.', effect:'player_quality_reduce', val:1},
+  {id:'read', name:'Perfect Read', desc:'You read the green perfectly.', effect:'player_putt_bonus', val:1},
+  {id:'crowd', name:'Crowd Erupts', desc:'The crowd rallies behind you.', effect:'momentum_boost', val:1},
+  {id:'animal', name:'Wild Animal', desc:'A goose wanders onto the fairway.', effect:'lie_change', val:1},
+  {id:'bounce', name:'Lucky Bounce', desc:'The ball kicks toward the fairway.', effect:'lie_improve', val:1}
+];
+
+// ═══════════════════════════════════════════════════════════════
+// WEATHER & CONDITIONS
+// ═══════════════════════════════════════════════════════════════
+var WEATHER_TYPES = [
+  {id:'calm',      name:'Calm',        distMod:1.00, skyA:'#87ceeb', skyB:'#c8e6c9', wind:0},
+  {id:'tailwind',  name:'Tailwind',    distMod:1.12, skyA:'#f0e68c', skyB:'#87ceeb', wind:0},
+  {id:'headwind',  name:'Headwind',    distMod:0.88, skyA:'#607d8b', skyB:'#90a4ae', wind:-1},
+  {id:'crosswind', name:'Crosswind',   distMod:0.94, skyA:'#b0c4de', skyB:'#87ceeb', wind:1},
+  {id:'strong',    name:'Strong Wind', distMod:0.82, skyA:'#37474f', skyB:'#546e7a', wind:-2}
+];
+var CONDITION_TYPES = [
+  {id:'morning',  name:'Morning Dew',  greenSpd:0.82},
+  {id:'midday',   name:'Midday',       greenSpd:1.00},
+  {id:'afternoon',name:'Afternoon',    greenSpd:1.15},
+  {id:'links',    name:'Links Style',  greenSpd:1.25},
+  {id:'wet',      name:'Wet & Slow',   greenSpd:0.70}
+];
+
+// ═══════════════════════════════════════════════════════════════
+// SHOT SHAPES
+// ═══════════════════════════════════════════════════════════════
+var SHAPES = {
+  draw:     {id:'draw',     distMod:1.05, sweet:0.10, goodZone:0.32, speedMod:1.30, label:'DRAW'},
+  straight: {id:'straight', distMod:1.00, sweet:0.13, goodZone:0.40, speedMod:1.00, label:'STRAIGHT'},
+  fade:     {id:'fade',     distMod:0.95, sweet:0.17, goodZone:0.48, speedMod:0.75, label:'FADE'}
+};
+
+// ═══════════════════════════════════════════════════════════════
+// LIES
+// ═══════════════════════════════════════════════════════════════
+var LIES = {
+  tee:     {id:'tee',     distMod:1.05, label:'TEE BOX', color:'#50c878'},
+  fairway: {id:'fairway', distMod:1.00, label:'FAIRWAY',  color:'#6dbe7a'},
+  rough:   {id:'rough',   distMod:0.75, label:'ROUGH',    color:'#c9a84c'},
+  sand:    {id:'sand',    distMod:0.55, label:'SAND',     color:'#e8d090'},
+  fringe:  {id:'fringe',  distMod:0.90, label:'FRINGE',   color:'#4aaa5a'}
+};
+
+// ═══════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════
+var G = null;   // player state
+var B = null;   // battle state
+var SM = null;  // swing meter state
+var locState = {};
+var activeRAF = null;
+var mapRAF = null;
+var _currentScreen = 'screen-title';
+var _pendingAction = null; // queued function after battle msg tap
+
+function makeDefaultG() {
+  return {
+    version: 2,
+    name: 'PLAYER',
+    icon: '🏌️',
+    level: 1, cash: 500, xp: 0,
+    stats: {power:25, accuracy:25, shortGame:25, mental:25},
+    rivals: {},
+    cards: [],
+    owned: [],
+    badges: [],
+    currentTour: 'muni'
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════
+// UTILITIES
+// ═══════════════════════════════════════════════════════════════
+function safeGet(id) {
+  var el = document.getElementById(id);
+  if (!el) { console.warn('safeGet: missing #' + id); }
+  return el;
+}
+
+var safeStore = {
+  get: function(key) {
+    try { return localStorage.getItem(key); } catch(e) { return null; }
+  },
+  set: function(key, val) {
+    try { localStorage.setItem(key, val); } catch(e) {}
+  },
+  remove: function(key) {
+    try { localStorage.removeItem(key); } catch(e) {}
+  }
+};
+
+function clamp(v, mn, mx) {
+  if (v < mn) return mn;
+  if (v > mx) return mx;
+  return v;
+}
+function lerp(a, b, t) { return a + (b - a) * t; }
+function rnd(mn, mx) { return Math.floor(Math.random() * (mx - mn + 1)) + mn; }
+function formatCash(n) { return '$' + n.toLocaleString(); }
+
+function getFrankieLine() {
+  var idx = Math.min(Math.floor(G.level / 2), 5);
+  return FRANKIE.levelLines[idx];
+}
+
+function getStatBoost(stat) {
+  var total = 0;
+  for (var i = 0; i < G.owned.length; i++) {
+    var itemId = G.owned[i];
+    var found = findShopItem(itemId);
+    if (found && found.bonus && found.bonus[stat]) {
+      total += found.bonus[stat];
+    }
+  }
+  return total;
+}
+
+function findShopItem(id) {
+  var tabs = ['equip','coaching','skills','practice'];
+  for (var t = 0; t < tabs.length; t++) {
+    var list = SHOP_ITEMS[tabs[t]];
+    for (var i = 0; i < list.length; i++) {
+      if (list[i].id === id) return list[i];
+    }
+  }
+  return null;
+}
+
+function getEffectiveStat(stat) {
+  return clamp(G.stats[stat] + getStatBoost(stat), 0, 100);
+}
+
+function showToast(msg) {
+  var el = safeGet('toast-msg');
+  if (!el) return;
+  el.textContent = msg;
+  safeGet('overlay-toast').style.display = 'flex';
+  el.classList.add('visible');
+  setTimeout(function() {
+    el.classList.remove('visible');
+    setTimeout(function() {
+      var ot = safeGet('overlay-toast');
+      if (ot) ot.style.display = 'none';
+    }, 300);
+  }, CONFIG.TOAST_DURATION);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SAVE / LOAD
+// ═══════════════════════════════════════════════════════════════
+function saveGame() {
+  var data = { G: G, locState: locState };
+  safeStore.set(CONFIG.SAVE_KEY, JSON.stringify(data));
+}
+
+function loadGame() {
+  var raw = safeStore.get(CONFIG.SAVE_KEY);
+  if (!raw) return false;
+  try {
+    var data = JSON.parse(raw);
+    G = data.G;
+    locState = data.locState || {};
+    if (!G || G.version !== 2) return false;
+    // ensure all rival entries exist
+    var ids = Object.keys(RIVALS_DATA);
+    for (var i = 0; i < ids.length; i++) {
+      var rid = ids[i];
+      if (!G.rivals[rid]) {
+        G.rivals[rid] = {met:false, wins:0, losses:0, cardSeen:false};
+      }
+    }
+    if (!G.stats) G.stats = {power:25,accuracy:25,shortGame:25,mental:25};
+    if (!G.cards) G.cards = [];
+    if (!G.owned) G.owned = [];
+    if (!G.badges) G.badges = [];
+    if (!G.currentTour) G.currentTour = 'muni';
+    return true;
+  } catch(e) { return false; }
+}
+
+function resetGame() {
+  safeStore.remove(CONFIG.SAVE_KEY);
+  G = makeDefaultG();
+  locState = {};
+  // unlock muni courses
+  locState['meadowbrook'] = {beaten:false, unlocked:true};
+  locState['parkview']    = {beaten:false, unlocked:false};
+  locState['munichamp']   = {beaten:false, unlocked:false};
+}
+
+function initLocState() {
+  var ids = Object.keys(LOCATIONS);
+  for (var i = 0; i < ids.length; i++) {
+    var lid = ids[i];
+    if (!locState[lid]) locState[lid] = {beaten:false, unlocked:false};
+  }
+  // ensure muni is unlocked if fresh
+  if (!locState['meadowbrook'].unlocked && G.currentTour === 'muni') {
+    locState['meadowbrook'].unlocked = true;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SCREEN MANAGER
+// ═══════════════════════════════════════════════════════════════
+var SCREEN_HOOKS = {
+  'screen-map': { enter: enterMap, exit: exitMap }
+};
+
+function showScreen(id) {
+  if (SCREEN_HOOKS[_currentScreen] && SCREEN_HOOKS[_currentScreen].exit) {
+    SCREEN_HOOKS[_currentScreen].exit();
+  }
+  var screens = document.querySelectorAll('.screen');
+  for (var i = 0; i < screens.length; i++) {
+    screens[i].classList.remove('active');
+  }
+  var target = safeGet(id);
+  if (target) target.classList.add('active');
+  _currentScreen = id;
+  if (SCREEN_HOOKS[id] && SCREEN_HOOKS[id].enter) {
+    SCREEN_HOOKS[id].enter();
+  }
+}
+
+function closeOverlay(id) {
+  var el = safeGet(id);
+  if (el) el.style.display = 'none';
+}
+
+function openOverlay(id) {
+  var el = safeGet(id);
+  if (el) { el.style.display = 'flex'; }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DIALOGUE SYSTEM
+// ═══════════════════════════════════════════════════════════════
+var _dlgPanels = [];
+var _dlgIdx = 0;
+var _dlgTyping = false;
+var _dlgTimer = null;
+var _dlgCallback = null;
+var _dlgFull = '';
+var _dlgPos = 0;
+
+function openDialogue(panels, callback) {
+  _dlgPanels = panels;
+  _dlgIdx = 0;
+  _dlgCallback = callback;
+  openOverlay('overlay-dialogue');
+  showDlgPanel(0);
+}
+
+function showDlgPanel(idx) {
+  if (idx >= _dlgPanels.length) {
+    closeOverlay('overlay-dialogue');
+    if (_dlgCallback) _dlgCallback();
+    return;
+  }
+  var p = _dlgPanels[idx];
+  var iconEl = safeGet('dialogue-icon');
+  var nameEl = safeGet('dialogue-name');
+  var textEl = safeGet('dialogue-text');
+  if (iconEl) iconEl.textContent = p.icon || '';
+  if (nameEl) nameEl.textContent = p.speaker || '';
+  if (textEl) textEl.textContent = '';
+  _dlgFull = p.text || '';
+  _dlgPos = 0;
+  _dlgTyping = true;
+  if (_dlgTimer) clearInterval(_dlgTimer);
+  _dlgTimer = setInterval(typeNextChar, CONFIG.TYPE_SPEED);
+}
+
+function typeNextChar() {
+  if (!_dlgTyping) return;
+  var textEl = safeGet('dialogue-text');
+  if (!textEl) return;
+  if (_dlgPos < _dlgFull.length) {
+    textEl.textContent = _dlgFull.substring(0, _dlgPos + 1);
+    _dlgPos++;
+  } else {
+    clearInterval(_dlgTimer);
+    _dlgTyping = false;
+  }
+}
+
+function dlgTap() {
+  if (_dlgTyping) {
+    // skip to full text
+    clearInterval(_dlgTimer);
+    _dlgTyping = false;
+    var textEl = safeGet('dialogue-text');
+    if (textEl) textEl.textContent = _dlgFull;
+  } else {
+    _dlgIdx++;
+    showDlgPanel(_dlgIdx);
+  }
+}
+
+// ── Battle message system ──────────────────────────────────────
+var _msgTimer = null;
+var _msgCallback = null;
+var _msgWaitingForTap = false;
+
+function setBattleMsg(text, showNext, callback) {
+  if (_msgTimer) { clearTimeout(_msgTimer); _msgTimer = null; }
+  _msgWaitingForTap = false;
+  _msgCallback = callback;
+  var textEl = safeGet('msg-text');
+  var tapEl  = safeGet('msg-tap');
+  if (textEl) textEl.textContent = text;
+  if (showNext) {
+    if (tapEl) tapEl.style.display = 'inline';
+    _msgWaitingForTap = true;
+  } else {
+    if (tapEl) tapEl.style.display = 'none';
+    _msgTimer = setTimeout(function() {
+      _msgTimer = null;
+      if (_msgCallback) { var cb = _msgCallback; _msgCallback = null; cb(); }
+    }, CONFIG.AUTO_ADVANCE);
+  }
+}
+
+function msgTap() {
+  if (!_msgWaitingForTap) return;
+  _msgWaitingForTap = false;
+  var tapEl = safeGet('msg-tap');
+  if (tapEl) tapEl.style.display = 'none';
+  if (_msgCallback) { var cb = _msgCallback; _msgCallback = null; cb(); }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MAP SCREEN
+// ═══════════════════════════════════════════════════════════════
+var _mapCanvas = null;
+var _mapCtx = null;
+var _mapTrees = [];
+var _mapClickHandler = null;
+
+// Long Island polygon points (approximate, scaled to 390×420 canvas)
+var LI_POLY = [
+  // Brooklyn/Queens area
+  [20,310],[45,295],[70,280],[95,270],[115,265],
+  // Nassau county south shore
+  [140,268],[170,262],[200,258],[230,255],[260,252],[290,250],
+  // East end / Hamptons tip
+  [320,245],[345,235],[368,222],[382,210],[388,195],
+  // North fork upper
+  [385,180],[370,165],[350,158],[325,155],[300,155],
+  // Sound shore
+  [275,152],[250,148],[225,145],[200,143],[175,142],
+  // North shore back west
+  [150,144],[125,148],[100,155],[78,162],[58,172],
+  // Back to Brooklyn
+  [40,185],[25,200],[15,220],[12,245],[15,275],[20,310]
+];
+
+var WATER_POLY = [
+  [0,420],[0,290],[20,310],[15,275],[12,245],[15,220],
+  [25,200],[40,185],[58,172],[78,162],[100,155],[125,148],
+  [150,144],[175,142],[200,143],[225,145],[250,148],[275,152],
+  [300,155],[325,155],[350,158],[370,165],[385,180],
+  [388,195],[390,220],[390,420]
+];
+
+function enterMap() {
+  updateMapFooter();
+  _mapCanvas = safeGet('map-canvas');
+  if (!_mapCanvas) return;
+  _mapCtx = _mapCanvas.getContext('2d');
+  generateMapTrees();
+  if (_mapClickHandler) {
+    _mapCanvas.removeEventListener('click', _mapClickHandler);
+    _mapCanvas.removeEventListener('touchend', _mapClickHandler);
+  }
+  _mapClickHandler = handleMapClick;
+  _mapCanvas.addEventListener('click', _mapClickHandler);
+  _mapCanvas.addEventListener('touchend', _mapClickHandler);
+  startMapLoop();
+}
+
+function exitMap() {
+  if (mapRAF) { cancelAnimationFrame(mapRAF); mapRAF = null; }
+  if (_mapCanvas && _mapClickHandler) {
+    _mapCanvas.removeEventListener('click', _mapClickHandler);
+    _mapCanvas.removeEventListener('touchend', _mapClickHandler);
+    _mapClickHandler = null;
+  }
+}
+
+function generateMapTrees() {
+  _mapTrees = [];
+  var treeZones = [
+    {x:30,y:185,w:60,count:5},
+    {x:100,y:160,w:80,count:6},
+    {x:200,y:155,w:60,count:4},
+    {x:300,y:162,w:50,count:4}
+  ];
+  for (var z = 0; z < treeZones.length; z++) {
+    var tz = treeZones[z];
+    for (var t = 0; t < tz.count; t++) {
+      _mapTrees.push({
+        x: tz.x + rnd(0, tz.w),
+        y: tz.y + rnd(-8, 8),
+        h: rnd(14, 22)
+      });
+    }
+  }
+}
+
+function startMapLoop() {
+  if (mapRAF) cancelAnimationFrame(mapRAF);
+  function loop(ts) {
+    drawMap(ts);
+    mapRAF = requestAnimationFrame(loop);
+  }
+  mapRAF = requestAnimationFrame(loop);
+}
+
+function drawMap(ts) {
+  if (!_mapCtx) return;
+  var ctx = _mapCtx;
+  var W = 390, H = 420;
+
+  // Sky / ocean background
+  var skyGrad = ctx.createLinearGradient(0,0,0,H);
+  skyGrad.addColorStop(0,'#1a3a5c');
+  skyGrad.addColorStop(1,'#2a5a8c');
+  ctx.fillStyle = skyGrad;
+  ctx.fillRect(0,0,W,H);
+
+  // Water fill (south shore)
+  ctx.fillStyle = '#1e4a7a';
+  ctx.beginPath();
+  ctx.moveTo(WATER_POLY[0][0], WATER_POLY[0][1]);
+  for (var i = 1; i < WATER_POLY.length; i++) {
+    ctx.lineTo(WATER_POLY[i][0], WATER_POLY[i][1]);
+  }
+  ctx.closePath();
+  ctx.fill();
+
+  // Long Island land mass
+  var landGrad = ctx.createLinearGradient(0,140,0,320);
+  landGrad.addColorStop(0,'#2d5a2d');
+  landGrad.addColorStop(1,'#1a3a1a');
+  ctx.fillStyle = landGrad;
+  ctx.strokeStyle = '#50c87844';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(LI_POLY[0][0], LI_POLY[0][1]);
+  for (var j = 1; j < LI_POLY.length; j++) {
+    ctx.lineTo(LI_POLY[j][0], LI_POLY[j][1]);
+  }
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // Trees on land
+  ctx.fillStyle = '#1a3a1a';
+  for (var k = 0; k < _mapTrees.length; k++) {
+    var tr = _mapTrees[k];
+    // trunk
+    ctx.fillStyle = '#2a1a0a';
+    ctx.fillRect(tr.x - 1, tr.y, 2, 4);
+    // canopy triangle
+    ctx.fillStyle = '#1a4a1a';
+    ctx.beginPath();
+    ctx.moveTo(tr.x, tr.y - tr.h);
+    ctx.lineTo(tr.x - tr.h * 0.5, tr.y);
+    ctx.lineTo(tr.x + tr.h * 0.5, tr.y);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // "LONG ISLAND" text
+  ctx.fillStyle = '#50c87866';
+  ctx.font = '8px monospace';
+  ctx.fillText('LONG ISLAND', 140, 200);
+
+  // "BROOKLYN" label
+  ctx.fillStyle = '#50c87855';
+  ctx.font = '7px monospace';
+  ctx.fillText('BROOKLYN', 28, 268);
+
+  // Draw course pins
+  var locIds = Object.keys(LOCATIONS);
+  for (var p = 0; p < locIds.length; p++) {
+    var lid = locIds[p];
+    var loc = LOCATIONS[lid];
+    var ls = locState[lid];
+    if (!ls) continue;
+
+    var px = loc.pin.x;
+    var py = loc.pin.y;
+    var beaten = ls.beaten;
+    var unlocked = ls.unlocked;
+
+    var pulse = 0.65 + 0.35 * Math.sin(ts / 400 + p * 0.8);
+
+    if (!unlocked) {
+      // locked — dim gray dot
+      ctx.globalAlpha = 0.25;
+      ctx.fillStyle = '#888888';
+      ctx.beginPath();
+      ctx.arc(px, py, 6, 0, 6.283);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    } else if (beaten) {
+      // beaten — solid accent filled
+      ctx.fillStyle = '#50c878';
+      ctx.beginPath();
+      ctx.arc(px, py, 7, 0, 6.283);
+      ctx.fill();
+      ctx.fillStyle = '#0a1a0b';
+      ctx.font = '8px monospace';
+      ctx.fillText('✓', px - 4, py + 3);
+    } else {
+      // available — pulsing white ring + inner dot
+      ctx.globalAlpha = pulse;
+      ctx.strokeStyle = loc.isTrophy ? '#f5c518' : '#ffffff';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(px, py, 8, 0, 6.283);
+      ctx.stroke();
+      ctx.fillStyle = loc.isTrophy ? '#f5c518' : '#50c878';
+      ctx.globalAlpha = 0.9;
+      ctx.beginPath();
+      ctx.arc(px, py, 4, 0, 6.283);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+
+    // Pin label
+    if (unlocked) {
+      ctx.fillStyle = beaten ? '#50c878aa' : '#ffffffcc';
+      ctx.font = '7px monospace';
+      var label = loc.name;
+      if (loc.isTrophy) label = '🏆 ' + loc.name;
+      ctx.fillText(label, px + 11, py + 3);
+    }
+  }
+
+  // Map title
+  ctx.fillStyle = '#50c87888';
+  ctx.font = '9px monospace';
+  ctx.fillText('TAP A COURSE TO PLAY', 50, 400);
+}
+
+function handleMapClick(e) {
+  e.preventDefault();
+  var rect = _mapCanvas.getBoundingClientRect();
+  var scaleX = _mapCanvas.width / rect.width;
+  var scaleY = _mapCanvas.height / rect.height;
+  var clientX, clientY;
+  if (e.changedTouches && e.changedTouches.length > 0) {
+    clientX = e.changedTouches[0].clientX;
+    clientY = e.changedTouches[0].clientY;
+  } else {
+    clientX = e.clientX;
+    clientY = e.clientY;
+  }
+  var cx = (clientX - rect.left) * scaleX;
+  var cy = (clientY - rect.top) * scaleY;
+
+  var locIds = Object.keys(LOCATIONS);
+  for (var i = 0; i < locIds.length; i++) {
+    var lid = locIds[i];
+    var loc = LOCATIONS[lid];
+    var ls = locState[lid];
+    if (!ls || !ls.unlocked) continue;
+    var dx = cx - loc.pin.x;
+    var dy = cy - loc.pin.y;
+    if (dx*dx + dy*dy <= 484) { // radius 22
+      showLocation(lid);
+      return;
+    }
+  }
+}
+
+function updateMapFooter() {
+  var cashEl = safeGet('map-cash');
+  var lvlEl  = safeGet('map-level');
+  if (cashEl) cashEl.textContent = formatCash(G.cash);
+  if (lvlEl) {
+    var xpNeeded = XP_PER_LEVEL[G.level];
+    lvlEl.textContent = 'LVL ' + G.level + '  |  XP ' + G.xp + ' / ' + xpNeeded;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// LOCATION SCREEN
+// ═══════════════════════════════════════════════════════════════
+var _currentLocId = null;
+var _currentWeather = null;
+var _currentCondition = null;
+
+function showLocation(locId) {
+  _currentLocId = locId;
+  var loc = LOCATIONS[locId];
+  var rival = RIVALS_DATA[loc.rivalId];
+  var ls = locState[locId];
+
+  // Pick weather & condition for this visit
+  _currentWeather = WEATHER_TYPES[rnd(0, WEATHER_TYPES.length - 1)];
+  _currentCondition = CONDITION_TYPES[rnd(0, CONDITION_TYPES.length - 1)];
+
+  var nameEl = safeGet('loc-name');
+  var circEl = safeGet('loc-circuit');
+  var rivIconEl = safeGet('loc-rival-icon');
+  var rivNameEl = safeGet('loc-rival-name');
+  var rivStyleEl = safeGet('loc-rival-style');
+  var rivRecEl = safeGet('loc-rival-record');
+  var frankieEl = safeGet('loc-frankie-quote');
+  var weatherEl = safeGet('loc-weather');
+  var greensEl  = safeGet('loc-greens');
+
+  if (nameEl) nameEl.textContent = loc.name;
+  if (circEl) circEl.textContent = loc.circuit.toUpperCase() + ' CIRCUIT — BEST OF ' + loc.totalHoles;
+  if (rivIconEl) rivIconEl.textContent = rival.icon;
+  if (rivNameEl) rivNameEl.textContent = rival.name;
+  if (rivStyleEl) rivStyleEl.textContent = rival.style + ' · ' + rival.hometown;
+
+  var rivData = G.rivals[rival.id];
+  var wStr = (rivData && rivData.wins) ? rivData.wins : 0;
+  var lStr = (rivData && rivData.losses) ? rivData.losses : 0;
+  if (rivRecEl) rivRecEl.textContent = 'W ' + wStr + ' / L ' + lStr;
+
+  if (frankieEl) frankieEl.textContent = '"' + getFrankieLine() + '"';
+  if (weatherEl) weatherEl.textContent = _currentWeather.name;
+  if (greensEl) greensEl.textContent = _currentCondition.name;
+
+  var enterBtn = safeGet('btn-enter');
+  if (enterBtn) {
+    if (G.level < loc.minLevel) {
+      enterBtn.textContent = 'NEED LVL ' + loc.minLevel;
+      enterBtn.disabled = true;
+    } else {
+      enterBtn.textContent = 'ENTER TOURNAMENT';
+      enterBtn.disabled = false;
+    }
+  }
+
+  showScreen('screen-location');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ENCOUNTER SCREEN
+// ═══════════════════════════════════════════════════════════════
+function showEncounter(locId) {
+  var loc = LOCATIONS[locId];
+  var rival = RIVALS_DATA[loc.rivalId];
+  var iconEl = safeGet('enc-rival-display');
+  var nameEl = safeGet('enc-rival-name');
+  if (iconEl) iconEl.textContent = rival.icon;
+  if (nameEl) nameEl.textContent = rival.name;
+  showScreen('screen-encounter');
+  // Show Frankie gossip via dialogue
+  var panels = [];
+  for (var i = 0; i < rival.frankieGossip.length; i++) {
+    panels.push({speaker: FRANKIE.name, icon: FRANKIE.icon, text: rival.frankieGossip[i]});
+  }
+  openDialogue(panels, null);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PLAYER CARD SCREEN
+// ═══════════════════════════════════════════════════════════════
+function showPlayerCard() {
+  var nameEl = safeGet('pc-name');
+  var lvlEl  = safeGet('pc-level');
+  var xpLbl  = safeGet('pc-xp-label');
+  var xpBar  = safeGet('pc-xp-bar');
+
+  if (nameEl) nameEl.textContent = G.name;
+  if (lvlEl) lvlEl.textContent = 'LEVEL ' + G.level;
+
+  var xpNow = G.xp;
+  var xpNext = XP_PER_LEVEL[G.level];
+  if (xpLbl) xpLbl.textContent = 'XP: ' + xpNow + ' / ' + xpNext;
+  if (xpBar) xpBar.style.width = Math.min(100, Math.floor(xpNow / xpNext * 100)) + '%';
+
+  var statKeys = ['power','accuracy','shortGame','mental'];
+  var statIds  = ['pc-power','pc-accuracy','pc-shortGame','pc-mental'];
+  var barIds   = ['pc-power-bar','pc-accuracy-bar','pc-shortgame-bar','pc-mental-bar'];
+  for (var i = 0; i < statKeys.length; i++) {
+    var sk = statKeys[i];
+    var eff = getEffectiveStat(sk);
+    var valEl = safeGet(statIds[i]);
+    var barEl = safeGet(barIds[i]);
+    if (valEl) valEl.textContent = eff;
+    if (barEl) barEl.style.width = eff + '%';
+  }
+
+  var badgeRow = safeGet('pc-badge-row');
+  if (badgeRow) {
+    badgeRow.innerHTML = '';
+    var badgeDefs = [
+      {id:'muni',   label:'🟢 MUNI CHAMP'},
+      {id:'county', label:'🔵 COUNTY CHAMP'},
+      {id:'state',  label:'🟡 STATE CHAMP'},
+      {id:'commissioner', label:'⭐ COMMISSIONER'}
+    ];
+    if (G.badges.length === 0) {
+      badgeRow.textContent = 'No badges yet.';
+      badgeRow.style.fontFamily = 'var(--font-body)';
+      badgeRow.style.fontSize = '18px';
+      badgeRow.style.color = 'var(--dim)';
+    } else {
+      for (var b = 0; b < badgeDefs.length; b++) {
+        if (G.badges.indexOf(badgeDefs[b].id) >= 0) {
+          var chip = document.createElement('div');
+          chip.className = 'badge-chip';
+          chip.textContent = badgeDefs[b].label;
+          badgeRow.appendChild(chip);
+        }
+      }
+    }
+  }
+
+  var metEl = safeGet('pc-rivals-met');
+  var metCount = 0;
+  var rids = Object.keys(G.rivals);
+  for (var r = 0; r < rids.length; r++) {
+    if (G.rivals[rids[r]] && G.rivals[rids[r]].met) metCount++;
+  }
+  if (metEl) metEl.textContent = 'Rivals met: ' + metCount + ' / 10';
+
+  showScreen('screen-player');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CARD GALLERY
+// ═══════════════════════════════════════════════════════════════
+function showCards() {
+  var list = safeGet('cards-list');
+  if (!list) return;
+  list.innerHTML = '';
+
+  var rivalOrder = ['donnie','smitty','ricky','ryan','lars','bigsmoke','dean','artist','jimmy','garth'];
+  for (var i = 0; i < rivalOrder.length; i++) {
+    var rid = rivalOrder[i];
+    var rival = RIVALS_DATA[rid];
+    var earned = G.cards.indexOf(rid) >= 0;
+    var slot = document.createElement('div');
+    slot.className = 'card-slot ' + rival.card.rarity + (earned ? ' earned' : ' locked');
+
+    var top = document.createElement('div');
+    top.className = 'card-slot-top';
+
+    var iconDiv = document.createElement('div');
+    iconDiv.className = 'card-icon';
+    iconDiv.textContent = earned ? rival.icon : '❓';
+
+    var metaDiv = document.createElement('div');
+    metaDiv.className = 'card-meta';
+
+    var rarDiv = document.createElement('div');
+    rarDiv.className = 'card-rarity ' + rival.card.rarity;
+    rarDiv.textContent = rival.card.rarity.toUpperCase();
+
+    var nameDiv = document.createElement('div');
+    nameDiv.className = 'card-name';
+    nameDiv.textContent = earned ? rival.name : '???';
+
+    var bonusDiv = document.createElement('div');
+    bonusDiv.className = 'card-bonus';
+    if (earned) {
+      var bonusParts = [];
+      var bkeys = Object.keys(rival.card.bonus);
+      for (var k = 0; k < bkeys.length; k++) {
+        bonusParts.push(bkeys[k].charAt(0).toUpperCase() + bkeys[k].slice(1) + ' +' + rival.card.bonus[bkeys[k]]);
+      }
+      bonusDiv.textContent = bonusParts.join(', ');
+    } else {
+      bonusDiv.textContent = 'Beat ' + rival.name + ' to unlock';
+      bonusDiv.style.color = 'var(--dim)';
+    }
+
+    metaDiv.appendChild(rarDiv);
+    metaDiv.appendChild(nameDiv);
+    metaDiv.appendChild(bonusDiv);
+    top.appendChild(iconDiv);
+    top.appendChild(metaDiv);
+    slot.appendChild(top);
+
+    if (earned) {
+      var body = document.createElement('div');
+      body.className = 'card-body';
+      var bioDiv = document.createElement('div');
+      bioDiv.className = 'card-bio';
+      bioDiv.textContent = rival.bio;
+      var quoteDiv = document.createElement('div');
+      quoteDiv.className = 'card-quote';
+      quoteDiv.textContent = '"' + rival.card.flavour + '"';
+      body.appendChild(bioDiv);
+      body.appendChild(quoteDiv);
+      slot.appendChild(body);
+      (function(s, b) {
+        s.addEventListener('click', function() {
+          b.classList.toggle('open');
+        });
+      })(slot, body);
+    }
+
+    list.appendChild(slot);
+  }
+  showScreen('screen-cards');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SHOP SCREEN
+// ═══════════════════════════════════════════════════════════════
+var _shopTab = 'equip';
+
+function showShop() {
+  _shopTab = 'equip';
+  updateShopCashDisplay();
+  renderShopTab('equip');
+  showScreen('screen-shop');
+}
+
+function updateShopCashDisplay() {
+  var el = safeGet('shop-cash-display');
+  if (el) el.textContent = formatCash(G.cash);
+}
+
+function renderShopTab(tab) {
+  _shopTab = tab;
+  var tabs = document.querySelectorAll('.shop-tab');
+  for (var t = 0; t < tabs.length; t++) {
+    tabs[t].classList.remove('active');
+    if (tabs[t].getAttribute('data-tab') === tab) tabs[t].classList.add('active');
+  }
+  var list = safeGet('shop-list');
+  if (!list) return;
+  list.innerHTML = '';
+  var items = SHOP_ITEMS[tab];
+  if (!items) return;
+
+  for (var i = 0; i < items.length; i++) {
+    var item = items[i];
+    var alreadyOwned = !item.repeatable && G.owned.indexOf(item.id) >= 0;
+    var canAfford = G.cash >= item.price;
+
+    var row = document.createElement('div');
+    row.className = 'shop-item';
+
+    var info = document.createElement('div');
+    info.className = 'shop-item-info';
+
+    var nm = document.createElement('div');
+    nm.className = 'shop-item-name';
+    nm.textContent = item.name;
+
+    var desc = document.createElement('div');
+    desc.className = 'shop-item-desc';
+    desc.textContent = item.desc;
+
+    var price = document.createElement('div');
+    price.className = 'shop-item-price';
+    price.textContent = alreadyOwned ? 'OWNED' : formatCash(item.price);
+
+    info.appendChild(nm);
+    info.appendChild(desc);
+    info.appendChild(price);
+
+    var btn = document.createElement('button');
+    btn.className = 'btn btn-sm shop-buy-btn';
+    btn.textContent = alreadyOwned ? '✓' : 'BUY';
+    btn.disabled = alreadyOwned || !canAfford;
+    if (!alreadyOwned && !canAfford) {
+      btn.style.background = 'var(--panel)';
+      btn.style.color = 'var(--dim)';
+      btn.style.boxShadow = 'none';
+    }
+
+    (function(itm) {
+      btn.addEventListener('click', function() { buyItem(itm); });
+    })(item);
+
+    row.appendChild(info);
+    row.appendChild(btn);
+    list.appendChild(row);
+  }
+}
+
+function buyItem(item) {
+  if (G.cash < item.price) return;
+  if (!item.repeatable && G.owned.indexOf(item.id) >= 0) return;
+  G.cash -= item.price;
+  if (!item.repeatable) {
+    G.owned.push(item.id);
+  }
+  // Apply stat bonuses directly for repeatable (practice/skills)
+  if (item.repeatable) {
+    var bkeys = Object.keys(item.bonus);
+    for (var k = 0; k < bkeys.length; k++) {
+      var stat = bkeys[k];
+      if (G.stats[stat] !== undefined) {
+        G.stats[stat] = clamp(G.stats[stat] + item.bonus[stat], 0, 100);
+      }
+    }
+  }
+  saveGame();
+  updateShopCashDisplay();
+  showToast(item.name + ' — ' + item.desc);
+  renderShopTab(_shopTab);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// BATTLE SYSTEM — INIT
+// ═══════════════════════════════════════════════════════════════
+var _battleCanvas = null;
+var _battleCtx = null;
+var _battleRAF = null;
+var _battleTrees = [];
+var _shotTrails = [];   // {startX,startY,endX,endY,opacity}
+var _ballAnim = null;   // {x,y,progress,startX,startY,endX,endY,startTime}
+var _playerSwingFrame = 0;
+var _rivalSwingFrame = 0;
+var _swingPhase = 'idle'; // idle|backswing|hold|impact|followthrough|rivalswing
+
+// Flag flap state
+var _flagFlap = false;
+var _flagFlapTimer = null;
+
+function startBattle(locId) {
+  var loc = LOCATIONS[locId];
+  var rival = RIVALS_DATA[loc.rivalId];
+
+  // init rival record
+  if (!G.rivals[rival.id]) G.rivals[rival.id] = {met:false, wins:0, losses:0, cardSeen:false};
+  G.rivals[rival.id].met = true;
+
+  B = {
+    locId: locId,
+    rival: rival,
+    loc: loc,
+    weather: _currentWeather,
+    condition: _currentCondition,
+    totalHoles: loc.totalHoles,
+    toWin: loc.toWin,
+    parValues: loc.parValues.slice(),
+    holeYards: loc.holeYards.slice(),
+    currentHole: 0,
+    playerWins: 0,
+    rivalWins: 0,
+    holesHalved: 0,
+    playerTotal: 0,
+    rivalTotal: 0,
+    holeStrokes: 0,
+    holePar: 0,
+    holeYardsLeft: 0,
+    lie: 'tee',
+    rivalScoreThisHole: 0,
+    playerHP: CONFIG.HP_START,
+    rivalHP: CONFIG.HP_START,
+    momentum: 0,
+    streak: 0,
+    scoreHistory: [], // {hole, par, playerScore, rivalScore, winner}
+    pendingCard: false,
+    randomEventThisHole: null
+  };
+
+  showScreen('screen-battle');
+
+  // Wire battle canvas
+  _battleCanvas = safeGet('battle-canvas');
+  if (_battleCanvas) _battleCtx = _battleCanvas.getContext('2d');
+  _shotTrails = [];
+  _ballAnim = null;
+  _playerSwingFrame = 0;
+  _rivalSwingFrame = 0;
+  _swingPhase = 'idle';
+
+  startBattleLoop();
+  startFlagFlap(B.weather);
+
+  // Update static battle UI
+  var rivIconEl = safeGet('rival-icon-sm');
+  var rivNameEl = safeGet('rival-name-battle');
+  var pNameEl   = safeGet('player-battle-name');
+  if (rivIconEl) rivIconEl.textContent = rival.icon;
+  if (rivNameEl) rivNameEl.textContent = rival.name;
+  if (pNameEl) pNameEl.textContent = G.name;
+
+  renderHPBars();
+  renderMomentumPips();
+  renderStreakBadge(false);
+
+  // Hide controls
+  hideAllBattleControls();
+
+  // Show rival intro
+  var panels = [
+    {speaker: rival.name, icon: rival.icon, text: rival.intro[0]},
+    {speaker: rival.name, icon: rival.icon, text: rival.intro[1]},
+    {speaker: FRANKIE.name, icon: FRANKIE.icon, text: getFrankieLine()}
+  ];
+
+  openDialogue(panels, function() {
+    nextHole();
+  });
+}
+
+function startFlagFlap(weather) {
+  if (_flagFlapTimer) clearInterval(_flagFlapTimer);
+  var interval = (weather && weather.distMod < 0.9) ? 200 : 600;
+  _flagFlap = false;
+  _flagFlapTimer = setInterval(function() {
+    _flagFlap = !_flagFlap;
+  }, interval);
+}
+
+function hideAllBattleControls() {
+  var mg = safeGet('move-grid');
+  var sr = safeGet('shape-row');
+  var ar = safeGet('action-row');
+  if (mg) mg.style.display = 'none';
+  if (sr) sr.style.display = 'none';
+  if (ar) ar.style.display = 'none';
+}
+
+// ── Battle canvas render loop ──────────────────────────────────
+function startBattleLoop() {
+  if (_battleRAF) cancelAnimationFrame(_battleRAF);
+  function loop(ts) {
+    drawBattleCanvas(ts);
+    _battleRAF = requestAnimationFrame(loop);
+  }
+  _battleRAF = requestAnimationFrame(loop);
+}
+
+function stopBattleLoop() {
+  if (_battleRAF) { cancelAnimationFrame(_battleRAF); _battleRAF = null; }
+  if (_flagFlapTimer) { clearInterval(_flagFlapTimer); _flagFlapTimer = null; }
+}
+
+function drawBattleCanvas(ts) {
+  if (!_battleCtx || !B) return;
+  var ctx = _battleCtx;
+  var W = 390, H = 220;
+  var weather = B.weather;
+  var condition = B.condition;
+
+  // ── SKY ──
+  var skyGrad = ctx.createLinearGradient(0,0,0,90);
+  skyGrad.addColorStop(0, weather.skyA);
+  skyGrad.addColorStop(1, weather.skyB);
+  ctx.fillStyle = skyGrad;
+  ctx.fillRect(0,0,W,90);
+
+  // Clouds
+  ctx.fillStyle = (weather.id === 'strong' || weather.id === 'headwind') ? '#546e7a' : '#ffffffcc';
+  drawCloud(ctx, 60 + Math.sin(ts/8000)*10, 25, 40, 18);
+  drawCloud(ctx, 200 + Math.sin(ts/9000 + 1)*8, 18, 30, 14);
+  drawCloud(ctx, 310 + Math.sin(ts/7500 + 2)*12, 30, 35, 16);
+
+  // ── TREE LINE ──
+  ctx.fillStyle = '#1a3a1a';
+  for (var t = 0; t < _battleTrees.length; t++) {
+    var tr = _battleTrees[t];
+    ctx.fillStyle = '#1a3a1a';
+    ctx.fillRect(tr.x - 1, tr.y, 2, 5);
+    ctx.fillStyle = tr.dark ? '#1a3a1a' : '#243825';
+    ctx.beginPath();
+    ctx.moveTo(tr.x, tr.y - tr.h);
+    ctx.lineTo(tr.x - tr.h * 0.5, tr.y + 2);
+    ctx.lineTo(tr.x + tr.h * 0.5, tr.y + 2);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // ── ROUGH SIDES ──
+  ctx.fillStyle = '#2d5a2d';
+  ctx.fillRect(0, 90, W, 85);
+
+  // ── FAIRWAY STRIP ──
+  var fwGrad = ctx.createLinearGradient(0,110,0,170);
+  fwGrad.addColorStop(0,'#4a8c5a');
+  fwGrad.addColorStop(1,'#3a7048');
+  ctx.fillStyle = fwGrad;
+  ctx.fillRect(30, 110, 330, 60);
+
+  // Fairway texture — alternating stripes
+  for (var s = 0; s < 330; s += 20) {
+    ctx.fillStyle = 'rgba(0,0,0,0.06)';
+    ctx.fillRect(30 + s, 110, 10, 60);
+  }
+
+  // ── GROUND / DEEP ROUGH ──
+  var gGrad = ctx.createLinearGradient(0,170,0,220);
+  gGrad.addColorStop(0,'#1a2e1a');
+  gGrad.addColorStop(1,'#0d1a0d');
+  ctx.fillStyle = gGrad;
+  ctx.fillRect(0,170,W,50);
+
+  // Ground grass blades
+  ctx.fillStyle = '#2a4a2a';
+  for (var g = 0; g < 50; g++) {
+    var gx = (g * 83 + 17) % W;
+    var gy = 172 + (g * 37) % 28;
+    ctx.fillRect(gx, gy, 1, 3);
+  }
+
+  // ── DISTANCE MARKERS ──
+  if (B && B.holeYardsLeft > 0) {
+    ctx.strokeStyle = '#ffffff44';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4,6]);
+    // 100yd marker
+    var marker100x = 330 - Math.min(280, Math.floor(100 / B.holeYards[B.currentHole] * 280));
+    ctx.beginPath();
+    ctx.moveTo(marker100x + 30, 110);
+    ctx.lineTo(marker100x + 30, 170);
+    ctx.stroke();
+    ctx.fillStyle = '#ffffff66';
+    ctx.font = '7px monospace';
+    ctx.setLineDash([]);
+    ctx.fillText('100', marker100x + 26, 108);
+  }
+  ctx.setLineDash([]);
+
+  // ── LIE INDICATOR ──
+  if (B) {
+    var lie = LIES[B.lie];
+    var ballX = 120;
+    ctx.strokeStyle = lie.color;
+    ctx.lineWidth = 2;
+    ctx.globalAlpha = 0.6;
+    ctx.beginPath();
+    ctx.arc(ballX, 165, 12, 0, 6.283);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = lie.color;
+    ctx.font = '7px monospace';
+    ctx.fillText(lie.label, ballX - 16, 182);
+  }
+
+  // ── FLAG ──
+  var flagX = 340;
+  var flagGroundY = 165;
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(flagX, flagGroundY);
+  ctx.lineTo(flagX, flagGroundY - 32);
+  ctx.stroke();
+  // Flag triangle
+  var flapOffset = _flagFlap ? 2 : 0;
+  ctx.fillStyle = '#cc2200';
+  ctx.beginPath();
+  ctx.moveTo(flagX, flagGroundY - 32);
+  ctx.lineTo(flagX + 10 + flapOffset, flagGroundY - 26);
+  ctx.lineTo(flagX, flagGroundY - 20);
+  ctx.closePath();
+  ctx.fill();
+  // Hole
+  ctx.fillStyle = '#0a1a0a';
+  ctx.beginPath();
+  ctx.ellipse(flagX, flagGroundY + 1, 6, 3, 0, 0, 6.283);
+  ctx.fill();
+
+  // ── SHOT TRAILS ──
+  for (var st = 0; st < _shotTrails.length; st++) {
+    var trail = _shotTrails[st];
+    ctx.strokeStyle = 'rgba(255,255,255,' + trail.opacity + ')';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3,5]);
+    ctx.beginPath();
+    ctx.moveTo(trail.startX, trail.startY);
+    // parabolic arc control point
+    var cpx = (trail.startX + trail.endX) / 2;
+    var cpy = Math.min(trail.startY, trail.endY) - 40;
+    ctx.quadraticCurveTo(cpx, cpy, trail.endX, trail.endY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // ── BALL ANIMATION ──
+  if (_ballAnim) {
+    var now = Date.now();
+    var elapsed = (now - _ballAnim.startTime) / 800;
+    if (elapsed >= 1) {
+      _ballAnim = null;
+    } else {
+      var bx = lerp(_ballAnim.startX, _ballAnim.endX, elapsed);
+      var arcH = 50 + (_ballAnim.endX - _ballAnim.startX) * 0.15;
+      var by = lerp(_ballAnim.startY, _ballAnim.endY, elapsed) - Math.sin(3.14159 * elapsed) * arcH;
+      ctx.fillStyle = '#ffffff';
+      ctx.shadowBlur = 4;
+      ctx.shadowColor = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(bx, by, 4, 0, 6.283);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+  }
+
+  // ── WEATHER EFFECTS ──
+  if (weather.wind < 0) {
+    // wind lines moving left
+    var windSpeed = weather.id === 'strong' ? 2.5 : 1.5;
+    var numLines = weather.id === 'strong' ? 8 : 5;
+    ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+    ctx.lineWidth = weather.id === 'strong' ? 1.5 : 1;
+    for (var wl = 0; wl < numLines; wl++) {
+      var wx = W - ((ts * windSpeed + wl * (W / numLines)) % W);
+      var wy = 100 + wl * 15;
+      ctx.beginPath();
+      ctx.moveTo(wx, wy);
+      ctx.lineTo(wx + 20, wy);
+      ctx.stroke();
+    }
+  }
+  if (condition && condition.id === 'wet') {
+    // rain dots
+    ctx.fillStyle = 'rgba(180,210,255,0.35)';
+    for (var rd = 0; rd < 30; rd++) {
+      var ry = (ts * 0.08 + rd * 37) % H;
+      var rx = (rd * 127) % W;
+      ctx.fillRect(rx, ry, 1, 3);
+    }
+  }
+  if (condition && condition.id === 'morning') {
+    // fog at ground
+    var fogGrad = ctx.createLinearGradient(0,148,0,175);
+    fogGrad.addColorStop(0,'rgba(255,255,255,0)');
+    fogGrad.addColorStop(1,'rgba(255,255,255,0.12)');
+    ctx.fillStyle = fogGrad;
+    ctx.fillRect(0,148,W,27);
+  }
+
+  // ── RIVAL SPRITE (upper right, small) ──
+  ctx.save();
+  ctx.scale(0.85, 0.85);
+  var rivalX = Math.floor(310 / 0.85);
+  var rivalGroundY = Math.floor(118 / 0.85);
+  // shadow
+  ctx.fillStyle = 'rgba(0,0,0,0.3)';
+  ctx.beginPath();
+  ctx.ellipse(rivalX, rivalGroundY + 2, 10, 4, 0, 0, 6.283);
+  ctx.fill();
+  drawGolfer(ctx, rivalX, rivalGroundY, _rivalSwingFrame, false, B.rival.color);
+  ctx.restore();
+
+  // ── PLAYER SPRITE ──
+  var playerX = 80;
+  var playerGroundY = 162;
+  // shadow
+  ctx.fillStyle = 'rgba(0,0,0,0.3)';
+  ctx.beginPath();
+  ctx.ellipse(playerX, playerGroundY + 2, 12, 4, 0, 0, 6.283);
+  ctx.fill();
+  drawGolfer(ctx, playerX, playerGroundY, _playerSwingFrame, true, '#50c878');
+
+  // ── HOLE INFO HUD ──
+  if (B) {
+    ctx.fillStyle = 'rgba(0,0,0,0.55)';
+    ctx.fillRect(0,0,W,22);
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '8px monospace';
+    ctx.fillText('HOLE ' + (B.currentHole + 1) + ' / ' + B.totalHoles, 8, 14);
+    ctx.fillStyle = '#50c878';
+    ctx.fillText('YOU: ' + B.playerWins, 130, 14);
+    ctx.fillStyle = '#f5c518';
+    ctx.fillText('TO WIN: ' + B.toWin, 200, 14);
+    ctx.fillStyle = '#d63a3a';
+    ctx.fillText(B.rival.name.toUpperCase().substring(0,8) + ': ' + B.rivalWins, 280, 14);
+  }
+}
+
+function drawCloud(ctx, x, y, w, h) {
+  ctx.globalAlpha = 0.6;
+  ctx.beginPath();
+  ctx.arc(x, y, h * 0.6, 0, 6.283);
+  ctx.arc(x + w * 0.3, y - h * 0.2, h * 0.55, 0, 6.283);
+  ctx.arc(x + w * 0.6, y, h * 0.5, 0, 6.283);
+  ctx.fill();
+  ctx.globalAlpha = 1;
+}
+
+function generateBattleTrees() {
+  _battleTrees = [];
+  for (var i = 0; i < 10; i++) {
+    _battleTrees.push({
+      x: 20 + i * 36 + rnd(-6, 6),
+      y: 92,
+      h: rnd(12, 20),
+      dark: i % 2 === 0
+    });
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// GOLFER SPRITE — 7 FRAME ANIMATION
+// ═══════════════════════════════════════════════════════════════
+function drawGolfer(ctx, x, y, frame, facingRight, color) {
+  var dir = facingRight ? 1 : -1;
+  ctx.strokeStyle = color;
+  ctx.fillStyle = color;
+  ctx.lineWidth = 2.5;
+  ctx.lineCap = 'round';
+
+  // Swing frame data: [armAngle, clubAngle, bodyLean]
+  // angle in degrees from vertical, positive = right (for facingRight)
+  var frames = [
+    {arm:-5,  club:5,   bodyLean:0,  label:'address'},      // 0: address
+    {arm:-25, club:-30, bodyLean:5,  label:'takeaway'},      // 1: takeaway
+    {arm:-55, club:-75, bodyLean:10, label:'backswing'},     // 2: backswing
+    {arm:-80, club:-105,bodyLean:12, label:'top'},           // 3: top of swing
+    {arm:-40, club:-60, bodyLean:8,  label:'transition'},    // 4: transition
+    {arm:10,  club:30,  bodyLean:-5, label:'impact'},        // 5: impact
+    {arm:70,  club:90,  bodyLean:-8, label:'followthrough'}  // 6: follow through
+  ];
+
+  var fd = frames[clamp(frame, 0, 6)];
+  var armRad = (fd.arm * dir) * 0.01745; // deg to rad
+  var clubRad = (fd.club * dir) * 0.01745;
+  var lean = fd.bodyLean * dir * 0.01745;
+
+  // Body dimensions
+  var headY = y - 50;
+  var shoulderY = y - 38;
+  var hipY = y - 20;
+
+  // Slight body lean
+  var hipX = x + Math.sin(lean) * 8;
+
+  // HEAD
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(x + Math.sin(lean) * 4, headY, 7, 0, 6.283);
+  ctx.fill();
+
+  // BODY
+  ctx.lineWidth = 2.5;
+  ctx.strokeStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(x + Math.sin(lean) * 4, headY + 7);
+  ctx.lineTo(hipX, hipY);
+  ctx.stroke();
+
+  // LEGS
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(hipX, hipY);
+  ctx.lineTo(hipX - dir * 8, y);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(hipX, hipY);
+  ctx.lineTo(hipX + dir * 6, y);
+  ctx.stroke();
+
+  // ARMS + CLUB
+  var shoulderX = x + Math.sin(lean) * 3;
+  var armLen = 18;
+  var armEndX = shoulderX + Math.sin(armRad) * armLen;
+  var armEndY = shoulderY + Math.cos(armRad) * armLen * 0.9;
+
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(shoulderX, shoulderY);
+  ctx.lineTo(armEndX, armEndY);
+  ctx.stroke();
+
+  // Club (thin line extending from hands)
+  var clubLen = 22;
+  var clubEndX = armEndX + Math.sin(clubRad) * clubLen;
+  var clubEndY = armEndY + Math.cos(clubRad) * clubLen * 0.9;
+
+  ctx.strokeStyle = '#cccccc';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(armEndX, armEndY);
+  ctx.lineTo(clubEndX, clubEndY);
+  ctx.stroke();
+
+  // Club head (small rect)
+  ctx.fillStyle = '#cccccc';
+  ctx.fillRect(clubEndX - 3, clubEndY - 2, 5, 4);
+
+  // IMPACT flash (frame 5 only, PERFECT quality)
+  if (frame === 5 && _impactFlash) {
+    ctx.globalAlpha = _impactFlash;
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(clubEndX, clubEndY, 10, 0, 6.283);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+}
+
+var _impactFlash = 0;
+var _impactFlashTimer = null;
+
+function triggerImpactFlash() {
+  _impactFlash = 1.0;
+  if (_impactFlashTimer) clearInterval(_impactFlashTimer);
+  _impactFlashTimer = setInterval(function() {
+    _impactFlash -= 0.1;
+    if (_impactFlash <= 0) {
+      _impactFlash = 0;
+      clearInterval(_impactFlashTimer);
+    }
+  }, 30);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SWING ANIMATION — phased RAF
+// ═══════════════════════════════════════════════════════════════
+var _swingAnimTarget = 'player'; // 'player' or 'rival'
+var _swingAnimCallback = null;
+var _swingAnimRAF = null;
+var _swingAnimStartTime = 0;
+var _swingAnimPhaseFrames = [];
+var _swingAnimPhaseIdx = 0;
+var _swingAnimPhaseDuration = 0;
+
+function runSwingAnimation(target, onComplete) {
+  _swingAnimTarget = target;
+  _swingAnimCallback = onComplete;
+  _swingPhase = 'backswing';
+
+  // backswing: frames 0→3 over 500ms
+  _swingAnimPhaseFrames = [0,1,2,3];
+  _swingAnimPhaseIdx = 0;
+  _swingAnimPhaseDuration = 500;
+  _swingAnimStartTime = Date.now();
+
+  if (_swingAnimRAF) cancelAnimationFrame(_swingAnimRAF);
+  _swingAnimRAF = requestAnimationFrame(animSwingStep);
+}
+
+function animSwingStep() {
+  var elapsed = Date.now() - _swingAnimStartTime;
+  var frames = _swingAnimPhaseFrames;
+  var t = Math.min(1, elapsed / _swingAnimPhaseDuration);
+  var frameIdx = Math.min(frames.length - 1, Math.floor(t * frames.length));
+  var currentFrame = frames[frameIdx];
+
+  if (_swingAnimTarget === 'player') {
+    _playerSwingFrame = currentFrame;
+  } else {
+    _rivalSwingFrame = currentFrame;
+  }
+
+  if (t >= 1) {
+    // phase done
+    if (_swingPhase === 'backswing') {
+      // hold at top — wait for STOP (player) or auto (rival)
+      _swingPhase = 'hold';
+      if (_swingAnimTarget === 'rival') {
+        // rival holds briefly then impacts
+        setTimeout(function() { playImpactPhase(); }, 350);
+      }
+      // player: swing meter controls when impact happens
+      if (_swingAnimCallback && _swingAnimTarget === 'rival') {
+        // don't call yet, will call after impact phase
+      }
+    } else if (_swingPhase === 'impact') {
+      // done
+      _swingPhase = 'idle';
+      if (_swingAnimCallback) {
+        var cb = _swingAnimCallback;
+        _swingAnimCallback = null;
+        cb();
+      }
+    }
+    return;
+  }
+
+  _swingAnimRAF = requestAnimationFrame(animSwingStep);
+}
+
+function playImpactPhase() {
+  _swingPhase = 'impact';
+  _swingAnimPhaseFrames = [3,4,5,6];
+  _swingAnimPhaseIdx = 0;
+  _swingAnimPhaseDuration = 380;
+  _swingAnimStartTime = Date.now();
+  if (_swingAnimRAF) cancelAnimationFrame(_swingAnimRAF);
+  _swingAnimRAF = requestAnimationFrame(animSwingStep);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// HOLE FLOW
+// ═══════════════════════════════════════════════════════════════
+function nextHole() {
+  if (B.currentHole >= B.totalHoles) {
+    finishMatch();
+    return;
+  }
+  var h = B.currentHole;
+  B.holePar = B.parValues[h];
+  B.holeYardsLeft = B.holeYards[h];
+  B.holeStrokes = 0;
+  B.lie = 'tee';
+  B.rivalScoreThisHole = 0;
+  B.randomEventThisHole = null;
+  _playerSwingFrame = 0;
+  _rivalSwingFrame = 0;
+  _shotTrails = [];
+
+  updateHoleInfoRow();
+
+  var holeMsg = 'HOLE ' + (h + 1) + ' of ' + B.totalHoles +
+    '  |  PAR ' + B.holePar +
+    '  |  ' + B.holeYards[h] + ' YARDS';
+  setBattleMsg(holeMsg, true, function() {
+    maybeRandomEvent(function() {
+      renderMoves();
+    });
+  });
+}
+
+function updateHoleInfoRow() {
+  var el = safeGet('hole-info-row');
+  if (!el || !B) return;
+  el.innerHTML = '';
+  var hSpan = document.createElement('span');
+  hSpan.textContent = 'Hole ' + (B.currentHole + 1);
+  var pSpan = document.createElement('span');
+  pSpan.textContent = 'Par ' + B.holePar;
+  pSpan.style.color = '#50c878';
+  var ySpan = document.createElement('span');
+  ySpan.textContent = B.holeYardsLeft + ' yds';
+  ySpan.style.color = '#f5c518';
+  el.appendChild(hSpan);
+  el.appendChild(pSpan);
+  el.appendChild(ySpan);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CLUB SELECTION
+// ═══════════════════════════════════════════════════════════════
+function getMoves(yards) {
+  var power = getEffectiveStat('power');
+  var acc   = getEffectiveStat('accuracy');
+  var sg    = getEffectiveStat('shortGame');
+
+  var moves = [];
+  if (yards >= 240) {
+    moves.push({name:'Driver',    stat:'power',     maxYards: 290 + Math.floor(power * 0.5), icon:'🏌️'});
+    moves.push({name:'3-Wood',    stat:'accuracy',  maxYards: 240 + Math.floor(acc * 0.3),   icon:'🌲'});
+  } else if (yards >= 140) {
+    moves.push({name:'Long Iron', stat:'power',     maxYards: 200 + Math.floor(power * 0.4), icon:'⛏️'});
+    moves.push({name:'Mid Iron',  stat:'accuracy',  maxYards: 160 + Math.floor(acc * 0.35),  icon:'🔧'});
+  } else if (yards >= 80) {
+    moves.push({name:'Short Iron',stat:'shortGame', maxYards: 120 + Math.floor(sg * 0.3),    icon:'📐'});
+    moves.push({name:'Wedge',     stat:'shortGame', maxYards: 80  + Math.floor(sg * 0.3),    icon:'⚡'});
+  } else if (yards >= 40) {
+    moves.push({name:'Wedge',     stat:'shortGame', maxYards: 80  + Math.floor(sg * 0.3),    icon:'⚡'});
+    moves.push({name:'Chip',      stat:'shortGame', maxYards: 40  + Math.floor(sg * 0.3),    icon:'🎯'});
+  } else {
+    moves.push({name:'Chip',      stat:'shortGame', maxYards: 40  + Math.floor(sg * 0.2),    icon:'🎯'});
+    moves.push({name:'Flop',      stat:'shortGame', maxYards: 20  + Math.floor(sg * 0.2),    icon:'🌊'});
+  }
+  return moves;
+}
+
+var _selectedMove = null;
+
+function renderMoves() {
+  _selectedMove = null;
+  updateHoleInfoRow();
+
+  var mg = safeGet('move-grid');
+  var sr = safeGet('shape-row');
+  var ar = safeGet('action-row');
+  if (mg) { mg.innerHTML = ''; mg.style.display = 'flex'; }
+  if (sr) sr.style.display = 'none';
+  if (ar) ar.style.display = 'none';
+
+  var moves = getMoves(B.holeYardsLeft);
+  for (var i = 0; i < moves.length; i++) {
+    var move = moves[i];
+    var btn = document.createElement('button');
+    btn.className = 'move-btn';
+    var strong = document.createElement('strong');
+    strong.textContent = move.icon + ' ' + move.name;
+    btn.appendChild(strong);
+    btn.appendChild(document.createTextNode('Max ' + move.maxYards + ' yds'));
+    (function(m) {
+      btn.addEventListener('click', function() { selectMove(m); });
+    })(move);
+    if (mg) mg.appendChild(btn);
+  }
+
+  setBattleMsg('Choose your club  —  ' + B.holeYardsLeft + ' yards to pin', false, null);
+}
+
+function selectMove(move) {
+  _selectedMove = move;
+  var mg = safeGet('move-grid');
+  var sr = safeGet('shape-row');
+  var ar = safeGet('action-row');
+  if (mg) mg.style.display = 'none';
+  if (sr) sr.style.display = 'flex';
+  if (ar) ar.style.display = 'flex';
+
+  // Reset shape selection
+  var shapeBtns = document.querySelectorAll('.shape-btn');
+  for (var i = 0; i < shapeBtns.length; i++) shapeBtns[i].classList.remove('selected');
+  document.getElementById('shape-straight').classList.add('selected');
+  SM = { shape: 'straight' };
+
+  var swBtn = safeGet('swing-btn');
+  if (swBtn) swBtn.textContent = 'SWING';
+
+  setBattleMsg(move.name + '  |  Pick shot shape', false, null);
+}
+
+function pickShape(shapeId) {
+  if (!SM) SM = {};
+  SM.shape = shapeId;
+  var shapeBtns = document.querySelectorAll('.shape-btn');
+  for (var i = 0; i < shapeBtns.length; i++) shapeBtns[i].classList.remove('selected');
+  var selBtn = safeGet('shape-' + shapeId);
+  if (selBtn) selBtn.classList.add('selected');
+  setBattleMsg(_selectedMove.name + ' — ' + SHAPES[shapeId].label + '  |  Ready to swing', false, null);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SWING METER
+// ═══════════════════════════════════════════════════════════════
+var _swingCanvas = null;
+var _swingCtx = null;
+var _needlePos = 0.5;
+var _needleDir = 1;
+var _needleCancelled = false;
+var _needleRAF = null;
+var _needleLastTs = 0;
+var _swingZones = null;
+var _swingQualityResult = null;
+
+function openSwing() {
+  if (!_selectedMove || !SM) return;
+  var shape = SHAPES[SM.shape];
+  var accuracy = getEffectiveStat('accuracy');
+  var mental = getEffectiveStat('mental');
+
+  // Zone widths
+  var sweetW   = shape.sweet + (accuracy / 100) * 0.08;
+  var goodW    = shape.goodZone + (accuracy / 100) * 0.06;
+  var okW      = (goodW - sweetW) / 2 * 0.55;
+  var greatW   = (goodW - sweetW) / 2 * 0.45;
+
+  var center = 0.5;
+  _swingZones = {
+    sweetL:  center - sweetW / 2,
+    sweetR:  center + sweetW / 2,
+    greatL:  center - sweetW / 2 - greatW,
+    greatR:  center + sweetW / 2 + greatW,
+    okL:     center - sweetW / 2 - greatW - okW,
+    okR:     center + sweetW / 2 + greatW + okW
+  };
+
+  _needlePos = 0.05;
+  _needleDir = 1;
+  _needleCancelled = false;
+  _swingQualityResult = null;
+
+  var swingClubEl = safeGet('swing-club-label');
+  var swingShapeEl = safeGet('swing-shape-label');
+  if (swingClubEl) swingClubEl.textContent = _selectedMove.name;
+  if (swingShapeEl) swingShapeEl.textContent = SHAPES[SM.shape].label + ' — ' + B.holeYardsLeft + ' yds to pin';
+
+  var actionBtn = safeGet('swing-action-btn');
+  if (actionBtn) actionBtn.textContent = 'SWING';
+
+  _swingCanvas = safeGet('swing-canvas');
+  _swingCtx = _swingCanvas ? _swingCanvas.getContext('2d') : null;
+  drawSwingMeter(false);
+
+  openOverlay('overlay-swing');
+
+  // Start the golfer backswing animation
+  runSwingAnimation('player', null);
+}
+
+function drawSwingMeter(swinging) {
+  if (!_swingCtx) return;
+  var ctx = _swingCtx;
+  var W = 360, H = 100;
+
+  ctx.clearRect(0,0,W,H);
+
+  // Background
+  ctx.fillStyle = '#0a1a0a';
+  ctx.fillRect(0,0,W,H);
+
+  // LCD grid lines
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+  ctx.lineWidth = 1;
+  for (var gx = 0; gx < W; gx += 18) {
+    ctx.beginPath();
+    ctx.moveTo(gx, 20);
+    ctx.lineTo(gx, 80);
+    ctx.stroke();
+  }
+
+  var zoneTop = 25, zoneH = 50;
+  var z = _swingZones;
+
+  function zoneRect(left, right, colorA, colorB) {
+    var grd = ctx.createLinearGradient(left * W, 0, right * W, 0);
+    grd.addColorStop(0, colorA);
+    grd.addColorStop(1, colorB);
+    ctx.fillStyle = grd;
+    ctx.fillRect(Math.floor(left * W), zoneTop, Math.ceil((right - left) * W), zoneH);
+  }
+
+  // Miss zones
+  zoneRect(0, z.okL, '#2a0000', '#5c0000');
+  zoneRect(z.okR, 1, '#5c0000', '#2a0000');
+  // OK zones
+  zoneRect(z.okL, z.greatL, '#4a2800', '#8a4800');
+  zoneRect(z.greatR, z.okR, '#8a4800', '#4a2800');
+  // Great zones
+  zoneRect(z.greatL, z.sweetL, '#1a4a1a', '#3a7a3a');
+  zoneRect(z.sweetR, z.greatR, '#3a7a3a', '#1a4a1a');
+  // Sweet spot — pulsing gold
+  var pulse = swinging ? (0.7 + 0.3 * Math.sin(Date.now() / 120)) : 0.85;
+  var sweetGrd = ctx.createLinearGradient(z.sweetL * W, 0, z.sweetR * W, 0);
+  sweetGrd.addColorStop(0, 'rgba(180,130,0,' + pulse + ')');
+  sweetGrd.addColorStop(0.5, 'rgba(245,197,24,' + pulse + ')');
+  sweetGrd.addColorStop(1, 'rgba(180,130,0,' + pulse + ')');
+  ctx.fillStyle = sweetGrd;
+  ctx.fillRect(Math.floor(z.sweetL * W), zoneTop, Math.ceil((z.sweetR - z.sweetL) * W), zoneH);
+
+  // Zone dividers
+  ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+  ctx.lineWidth = 1;
+  var dividers = [z.okL, z.greatL, z.sweetL, z.sweetR, z.greatR, z.okR];
+  for (var d = 0; d < dividers.length; d++) {
+    ctx.beginPath();
+    ctx.moveTo(Math.floor(dividers[d] * W), zoneTop);
+    ctx.lineTo(Math.floor(dividers[d] * W), zoneTop + zoneH);
+    ctx.stroke();
+  }
+
+  // Zone labels
+  ctx.font = '10px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillStyle = 'rgba(255,255,255,0.55)';
+  ctx.fillText('MISS', z.okL * W * 0.5, zoneTop + zoneH * 0.6);
+  ctx.fillText('OK', (z.okL + z.greatL) * W * 0.5, zoneTop + zoneH * 0.6);
+  ctx.fillText('GREAT', (z.greatL + z.sweetL) * W * 0.5, zoneTop + zoneH * 0.6);
+  ctx.fillStyle = 'rgba(245,197,24,0.8)';
+  ctx.fillText('PERFECT', (z.sweetL + z.sweetR) * W * 0.5, zoneTop + zoneH * 0.6);
+  ctx.fillStyle = 'rgba(255,255,255,0.55)';
+  ctx.fillText('GREAT', (z.sweetR + z.greatR) * W * 0.5, zoneTop + zoneH * 0.6);
+  ctx.fillText('OK', (z.greatR + z.okR) * W * 0.5, zoneTop + zoneH * 0.6);
+  ctx.fillText('MISS', (z.okR + 1) * W * 0.5, zoneTop + zoneH * 0.6);
+  ctx.textAlign = 'left';
+
+  // Meter border (pixel corners)
+  ctx.strokeStyle = '#50c878';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(0, zoneTop, W, zoneH);
+  // Corner accent pixels
+  ctx.fillStyle = '#50c878';
+  var corners = [[0,zoneTop],[W-4,zoneTop],[0,zoneTop+zoneH-4],[W-4,zoneTop+zoneH-4]];
+  for (var co = 0; co < corners.length; co++) {
+    ctx.fillRect(corners[co][0], corners[co][1], 4, 4);
+  }
+
+  // Top label strip
+  ctx.fillStyle = '#0a1a0a';
+  ctx.fillRect(0, 0, W, zoneTop);
+  ctx.fillStyle = '#50c878';
+  ctx.font = '8px monospace';
+  ctx.fillText('SWING METER', 8, 16);
+  // Club + shape in top right
+  ctx.fillStyle = '#f5c518';
+  ctx.font = '9px monospace';
+  if (_selectedMove) ctx.fillText(_selectedMove.name + '  ' + (SM && SM.shape ? SHAPES[SM.shape].label : ''), W - 160, 16);
+
+  // Bottom label strip
+  ctx.fillStyle = '#0a1a0a';
+  ctx.fillRect(0, zoneTop + zoneH, W, H - zoneTop - zoneH);
+
+  // Needle
+  var nx = Math.floor(_needlePos * W);
+  var inSweet = _needlePos >= z.sweetL && _needlePos <= z.sweetR;
+  var inMiss  = _needlePos < z.okL || _needlePos > z.okR;
+  ctx.shadowBlur = 8;
+  ctx.shadowColor = inSweet ? '#f5c518' : (inMiss ? '#ff4444' : '#ffffff');
+  ctx.strokeStyle = inSweet ? '#f5c518' : (inMiss ? '#ff4444' : '#ffffff');
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(nx, zoneTop - 2);
+  ctx.lineTo(nx, zoneTop + zoneH + 2);
+  ctx.stroke();
+  // Triangle pointer at bottom
+  ctx.fillStyle = inSweet ? '#f5c518' : (inMiss ? '#ff4444' : '#ffffff');
+  ctx.beginPath();
+  ctx.moveTo(nx - 5, zoneTop + zoneH + 2);
+  ctx.lineTo(nx + 5, zoneTop + zoneH + 2);
+  ctx.lineTo(nx, zoneTop + zoneH + 8);
+  ctx.closePath();
+  ctx.fill();
+  ctx.shadowBlur = 0;
+
+  // Needle glow zone pulse
+  if (swinging && !inMiss) {
+    var glowPulse = 0.12 + 0.08 * Math.sin(Date.now() / 80);
+    var zone = inSweet ? [z.sweetL, z.sweetR] :
+               (_needlePos >= z.greatL && _needlePos <= z.greatR) ? [z.greatL, z.greatR] : null;
+    if (zone) {
+      ctx.fillStyle = 'rgba(255,255,255,' + glowPulse + ')';
+      ctx.fillRect(Math.floor(zone[0] * W), zoneTop, Math.ceil((zone[1] - zone[0]) * W), zoneH);
+    }
+  }
+}
+
+function startNeedle() {
+  _needleCancelled = false;
+  _needleLastTs = 0;
+  var accuracy = getEffectiveStat('accuracy');
+  var mental = getEffectiveStat('mental');
+  var shape = SHAPES[SM.shape];
+  var needleSpeed = (1.4 + (1 - accuracy / 100) * 1.2) * shape.speedMod;
+  needleSpeed = needleSpeed * (1 - mental / 300); // mental reduces speed slightly
+
+  var actionBtn = safeGet('swing-action-btn');
+  if (actionBtn) actionBtn.textContent = 'STOP';
+
+  function step(ts) {
+    if (_needleCancelled) return;
+    if (_needleLastTs === 0) _needleLastTs = ts;
+    var dt = (ts - _needleLastTs) / 1000;
+    _needleLastTs = ts;
+    _needlePos += _needleDir * needleSpeed * dt;
+    if (_needlePos >= 1) { _needlePos = 1; _needleDir = -1; }
+    if (_needlePos <= 0) { _needlePos = 0; _needleDir = 1; }
+    drawSwingMeter(true);
+    _needleRAF = requestAnimationFrame(step);
+  }
+  _needleRAF = requestAnimationFrame(step);
+}
+
+function stopNeedle() {
+  _needleCancelled = true;
+  if (_needleRAF) { cancelAnimationFrame(_needleRAF); _needleRAF = null; }
+
+  var z = _swingZones;
+  var pos = _needlePos;
+  var quality;
+  if (pos >= z.sweetL && pos <= z.sweetR) {
+    quality = 'PERFECT';
+  } else if (pos >= z.greatL && pos <= z.greatR) {
+    quality = 'GREAT';
+  } else if (pos >= z.okL && pos <= z.okR) {
+    quality = 'OK';
+  } else {
+    quality = 'MISHIT';
+  }
+  _swingQualityResult = quality;
+
+  // Play impact phase animation
+  if (quality === 'PERFECT') triggerImpactFlash();
+  playImpactPhase();
+
+  // Show quality flash
+  showQualityFlash(quality, function() {
+    closeOverlay('overlay-swing');
+    playerShotResult(quality, SM.shape);
+  });
+}
+
+function showQualityFlash(quality, callback) {
+  var flashEl = safeGet('swing-quality-flash');
+  var textEl  = safeGet('swing-quality-text');
+  if (!flashEl || !textEl) { callback(); return; }
+
+  var colors = {PERFECT:'#f5c518', GREAT:'#50c878', OK:'#c9a84c', MISHIT:'#d63a3a'};
+  textEl.textContent = quality + (quality === 'PERFECT' ? '!' : '');
+  textEl.style.color = colors[quality];
+
+  // Draw radial gradient on swing canvas for flash
+  if (_swingCtx) {
+    var ctx = _swingCtx;
+    var W = 360, H = 100;
+    var grad = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, W/2);
+    var col = colors[quality];
+    grad.addColorStop(0, col + 'aa');
+    grad.addColorStop(1, 'transparent');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0,0,W,H);
+
+    ctx.fillStyle = colors[quality];
+    ctx.shadowBlur = 12;
+    ctx.shadowColor = colors[quality];
+    ctx.font = 'bold 28px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(quality + (quality === 'PERFECT' ? '!' : ''), W/2, H/2 + 8);
+    ctx.shadowBlur = 0;
+    ctx.textAlign = 'left';
+
+    // Star burst for PERFECT
+    if (quality === 'PERFECT') {
+      ctx.strokeStyle = colors[quality];
+      ctx.lineWidth = 1.5;
+      for (var ray = 0; ray < 8; ray++) {
+        var angle = ray * 0.7854;
+        ctx.beginPath();
+        ctx.moveTo(W/2 + Math.cos(angle) * 24, H/2 + Math.sin(angle) * 24);
+        ctx.lineTo(W/2 + Math.cos(angle) * 44, H/2 + Math.sin(angle) * 44);
+        ctx.stroke();
+      }
+    }
+  }
+
+  flashEl.style.opacity = '1';
+  setTimeout(function() {
+    flashEl.style.opacity = '0';
+    setTimeout(callback, 130);
+  }, 450);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PUTTING MINIGAME
+// ═══════════════════════════════════════════════════════════════
+var _puttCanvas = null;
+var _puttCtx = null;
+var _puttPhase = 0; // 0=horizontal, 1=vertical, 2=done
+var _puttH = 0.5;   // horizontal lock position (0-1)
+var _puttV = 0.5;   // vertical lock position (0-1)
+var _puttPos = 0;
+var _puttDir = 1;
+var _puttCancelled = false;
+var _puttRAF = null;
+var _puttCallback = null;
+
+function openPutt(callback) {
+  _puttCallback = callback;
+  _puttPhase = 0;
+  _puttH = 0.5;
+  _puttV = 0.5;
+  _puttPos = 0;
+  _puttDir = 1;
+  _puttCancelled = false;
+
+  var subEl = safeGet('putt-sub');
+  if (subEl) subEl.textContent = B.holeYardsLeft + ' yards — tap to aim';
+  var hintEl = safeGet('putt-tap-hint');
+  if (hintEl) hintEl.textContent = 'TAP to lock horizontal line';
+
+  _puttCanvas = safeGet('putt-canvas');
+  _puttCtx = _puttCanvas ? _puttCanvas.getContext('2d') : null;
+  openOverlay('overlay-putt');
+  startPuttAnimation();
+}
+
+function startPuttAnimation() {
+  _puttCancelled = false;
+  var sg = getEffectiveStat('shortGame');
+  var puttSpeed = 1.2 - (sg / 100) * 0.6;
+
+  function step(ts) {
+    if (_puttCancelled) return;
+    _puttPos += _puttDir * puttSpeed * 0.016;
+    if (_puttPos >= 1) { _puttPos = 1; _puttDir = -1; }
+    if (_puttPos <= 0) { _puttPos = 0; _puttDir = 1; }
+    drawPutt();
+    _puttRAF = requestAnimationFrame(step);
+  }
+  _puttRAF = requestAnimationFrame(step);
+}
+
+function drawPutt() {
+  if (!_puttCtx) return;
+  var ctx = _puttCtx;
+  var W = 220, H = 220;
+  var cx = W/2, cy = H/2, r = 90;
+
+  ctx.clearRect(0,0,W,H);
+
+  // Green circle
+  var gGrad = ctx.createRadialGradient(cx,cy,0,cx,cy,r);
+  gGrad.addColorStop(0,'#3a7a3a');
+  gGrad.addColorStop(0.7,'#2d6a2d');
+  gGrad.addColorStop(1,'#1a4a1a');
+  ctx.fillStyle = gGrad;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, 6.283);
+  ctx.fill();
+
+  // Green border
+  ctx.strokeStyle = '#50c878';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, 6.283);
+  ctx.stroke();
+
+  // Hole
+  ctx.fillStyle = '#0a1a0a';
+  ctx.beginPath();
+  ctx.arc(cx, cy, 8, 0, 6.283);
+  ctx.fill();
+  ctx.strokeStyle = '#ffffff44';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.arc(cx, cy, 8, 0, 6.283);
+  ctx.stroke();
+
+  // Center crosshair reference
+  ctx.strokeStyle = '#ffffff22';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(cx, cy - r); ctx.lineTo(cx, cy + r); ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(cx - r, cy); ctx.lineTo(cx + r, cy); ctx.stroke();
+
+  // Moving line
+  ctx.strokeStyle = '#f5c518';
+  ctx.lineWidth = 2;
+  ctx.shadowBlur = 6;
+  ctx.shadowColor = '#f5c518';
+
+  if (_puttPhase === 0) {
+    // Horizontal line moving vertically
+    var ly = cy - r + _puttPos * r * 2;
+    var hw = Math.sqrt(Math.max(0, r * r - (ly - cy) * (ly - cy)));
+    ctx.beginPath();
+    ctx.moveTo(cx - hw, ly);
+    ctx.lineTo(cx + hw, ly);
+    ctx.stroke();
+  } else if (_puttPhase === 1) {
+    // Locked horizontal
+    var lockedY = cy - r + _puttH * r * 2;
+    var lhw = Math.sqrt(Math.max(0, r * r - (lockedY - cy) * (lockedY - cy)));
+    ctx.strokeStyle = '#50c878';
+    ctx.shadowColor = '#50c878';
+    ctx.beginPath();
+    ctx.moveTo(cx - lhw, lockedY);
+    ctx.lineTo(cx + lhw, lockedY);
+    ctx.stroke();
+    // Moving vertical
+    ctx.strokeStyle = '#f5c518';
+    ctx.shadowColor = '#f5c518';
+    var vx = cx - r + _puttPos * r * 2;
+    var vhh = Math.sqrt(Math.max(0, r * r - (vx - cx) * (vx - cx)));
+    ctx.beginPath();
+    ctx.moveTo(vx, cy - vhh);
+    ctx.lineTo(vx, cy + vhh);
+    ctx.stroke();
+  }
+
+  ctx.shadowBlur = 0;
+
+  // Locked crosshair dot at intersection (phase 1)
+  if (_puttPhase === 1) {
+    var dotY = cy - r + _puttH * r * 2;
+    var dotX = cx - r + _puttPos * r * 2;
+    if (dotX >= cx - r && dotX <= cx + r) {
+      ctx.fillStyle = '#f5c518';
+      ctx.beginPath();
+      ctx.arc(dotX, dotY, 5, 0, 6.283);
+      ctx.fill();
+    }
+  }
+}
+
+function puttTap() {
+  if (_puttPhase === 0) {
+    _puttH = _puttPos;
+    _puttPhase = 1;
+    var hintEl = safeGet('putt-tap-hint');
+    if (hintEl) hintEl.textContent = 'TAP to lock vertical line';
+  } else if (_puttPhase === 1) {
+    _puttCancelled = true;
+    if (_puttRAF) { cancelAnimationFrame(_puttRAF); _puttRAF = null; }
+    _puttV = _puttPos;
+    _puttPhase = 2;
+    var quality = scorePutt(_puttH, _puttV);
+    drawPutt();
+    closeOverlay('overlay-putt');
+    if (_puttCallback) _puttCallback(quality);
+  }
+}
+
+function scorePutt(h, v) {
+  var hdist = Math.abs(h - 0.5);
+  var vdist = Math.abs(v - 0.5);
+  var dist = Math.sqrt(hdist * hdist + vdist * vdist);
+  if (dist < 0.08) return 'PERFECT';
+  if (dist < 0.18) return 'GREAT';
+  if (dist < 0.32) return 'OK';
+  return 'MISHIT';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SHOT RESULT CALCULATION
+// ═══════════════════════════════════════════════════════════════
+var QUALITY_FACTORS = {PERFECT:1.0, GREAT:0.90, OK:0.75, MISHIT:0.45};
+var QUALITY_LIES    = {PERFECT:'fairway', GREAT:'fairway', OK:'rough', MISHIT:'rough'};
+
+function playerShotResult(quality, shapeId) {
+  if (!B || !_selectedMove) return;
+  var move = _selectedMove;
+  var shape = SHAPES[shapeId];
+  var lie = LIES[B.lie];
+  var weather = B.weather;
+  var momentum = B.momentum;
+
+  var qualFactor  = QUALITY_FACTORS[quality];
+  var lieMod      = lie.distMod;
+  var weatherMod  = weather.distMod;
+  var momentumMod = 1 + momentum * 0.06;
+  var shapeMod    = shape.distMod;
+
+  var dist = Math.floor(
+    move.maxYards * qualFactor * lieMod * weatherMod * momentumMod * shapeMod
+  );
+
+  // Random event modifier
+  if (B.randomEventThisHole && B.randomEventThisHole.effect === 'player_quality_reduce') {
+    dist = Math.floor(dist * 0.8);
+  }
+
+  B.holeYardsLeft = Math.max(0, B.holeYardsLeft - dist);
+  B.holeStrokes++;
+
+  // Determine new lie
+  if (B.holeYardsLeft <= 0) {
+    B.lie = 'fairway';
+  } else if (quality === 'MISHIT') {
+    B.lie = 'rough';
+  } else if (quality === 'OK') {
+    B.lie = Math.random() > 0.4 ? 'fairway' : 'rough';
+  } else {
+    B.lie = 'fairway';
+  }
+
+  // Animate ball flight
+  animateBallFlight(quality, dist, function() {
+    if (B.holeYardsLeft <= 0) {
+      // Holed out
+      rivalTakeTurn();
+    } else if (B.holeStrokes >= CONFIG.MAX_STROKES) {
+      // Max strokes
+      B.holeYardsLeft = 0;
+      rivalTakeTurn();
+    } else if (B.holeYardsLeft <= CONFIG.PUTT_RANGE) {
+      // Putting
+      openPutt(function(putQuality) {
+        B.holeStrokes++;
+        if (putQuality === 'PERFECT' || (putQuality === 'GREAT' && B.holeYardsLeft <= 8)) {
+          B.holeYardsLeft = 0;
+          rivalTakeTurn();
+        } else {
+          B.holeYardsLeft = Math.max(1, Math.floor(B.holeYardsLeft * 0.3));
+          B.lie = 'fringe';
+          renderMoves();
+        }
+      });
+    } else {
+      updateHoleInfoRow();
+      renderMoves();
+    }
+  });
+}
+
+function animateBallFlight(quality, distYards, callback) {
+  var startX = 90;
+  var startY = 155;
+  var range = Math.min(distYards / 300, 1);
+  var endX = 130 + Math.floor(range * 180);
+  var endY = 155;
+
+  if (quality === 'MISHIT') {
+    endX = 130 + Math.floor(range * 100);
+    endY = 160 + rnd(0, 10);
+  }
+
+  _ballAnim = {
+    startX: startX, startY: startY,
+    endX: endX, endY: endY,
+    startTime: Date.now()
+  };
+
+  // Add trail
+  _shotTrails.push({startX: startX, startY: startY, endX: endX, endY: endY, opacity: 0.3});
+  if (_shotTrails.length > 3) _shotTrails.shift();
+  // Fade older trails
+  for (var i = 0; i < _shotTrails.length - 1; i++) {
+    _shotTrails[i].opacity = 0.12;
+  }
+
+  // Shot result message
+  var shotMsg = quality + '! ' + distYards + ' yards';
+  if (B.lie === 'rough') shotMsg += ' — ROUGH';
+  if (B.lie === 'fairway') shotMsg += ' — FAIRWAY';
+  var yardMsg = B.holeYardsLeft > 0 ? '  |  ' + B.holeYardsLeft + ' yards to pin' : '  |  ON THE GREEN!';
+  setBattleMsg(shotMsg + yardMsg, false, null);
+
+  setTimeout(callback, 850);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RIVAL AI
+// ═══════════════════════════════════════════════════════════════
+var _thinkingTimer = null;
+var _thinkingDots = 0;
+var _thinkingInterval = null;
+
+function rivalTakeTurn() {
+  hideAllBattleControls();
+  setBattleMsg(B.rival.name + ' is thinking...', false, null);
+
+  // Thinking animation
+  _thinkingDots = 0;
+  if (_thinkingInterval) clearInterval(_thinkingInterval);
+  _thinkingInterval = setInterval(function() {
+    _thinkingDots = (_thinkingDots + 1) % 4;
+    var dots = '';
+    for (var i = 0; i < _thinkingDots; i++) dots += '.';
+    var textEl = safeGet('msg-text');
+    if (textEl) textEl.textContent = B.rival.name + ' is thinking' + dots;
+  }, 280);
+
+  // Start rival swing animation
+  runSwingAnimation('rival', null);
+
+  setTimeout(function() {
+    clearInterval(_thinkingInterval);
+    playImpactPhase();
+    var score = generateRivalScore();
+    B.rivalScoreThisHole = score;
+
+    // Apply random event
+    if (B.randomEventThisHole && B.randomEventThisHole.effect === 'rival_penalty') {
+      B.rivalScoreThisHole = Math.max(B.holePar - 1, B.rivalScoreThisHole + 1);
+    }
+
+    setTimeout(function() {
+      resolveHole(B.holeStrokes, B.rivalScoreThisHole);
+    }, 400);
+  }, 950);
+}
+
+function generateRivalScore() {
+  var skill = B.rival.skill;
+  var roll = rnd(0, 100);
+  var par = B.holePar;
+
+  // Eagle chance (only par 5 mostly)
+  if (roll < skill * 0.06 && par >= 5) return par - 2;
+  // Birdie
+  if (roll < skill * 0.35) return par - 1;
+  // Par
+  if (roll < skill * 0.8) return par;
+  // Bogey
+  if (roll < skill * 0.95) return par + 1;
+  // Double
+  return par + 2;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RANDOM EVENTS
+// ═══════════════════════════════════════════════════════════════
+function maybeRandomEvent(callback) {
+  if (Math.random() > 0.12) { callback(); return; }
+  var evt = RANDOM_EVENTS[rnd(0, RANDOM_EVENTS.length - 1)];
+  B.randomEventThisHole = evt;
+  openDialogue([
+    {speaker:'Course Event', icon:'⚡', text: evt.name + ': ' + evt.desc}
+  ], callback);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// HOLE RESOLUTION
+// ═══════════════════════════════════════════════════════════════
+function resolveHole(playerScore, rivalScore) {
+  var par = B.holePar;
+
+  // HP changes
+  var playerDelta = calculateHPDelta(playerScore, par);
+  var rivalDelta  = calculateHPDelta(rivalScore, par);
+  applyHPChange('player', playerDelta);
+  applyHPChange('rival', rivalDelta);
+
+  // Match play: who won the hole
+  var holeResult;
+  if (playerScore < rivalScore) {
+    holeResult = 'win';
+    B.playerWins++;
+  } else if (rivalScore < playerScore) {
+    holeResult = 'loss';
+    B.rivalWins++;
+  } else {
+    holeResult = 'halved';
+    B.holesHalved++;
+  }
+
+  // Momentum
+  updateMomentum(playerScore - par);
+
+  // Record
+  B.scoreHistory.push({
+    hole: B.currentHole + 1,
+    par: par,
+    playerScore: playerScore,
+    rivalScore: rivalScore,
+    winner: holeResult
+  });
+
+  B.playerTotal += playerScore;
+  B.rivalTotal  += rivalScore;
+  B.currentHole++;
+
+  // Build result message
+  var scoreName = scoreToName(playerScore, par);
+  var rivalScoreName = scoreToName(rivalScore, par);
+  var resultStr;
+  if (holeResult === 'win')    resultStr = '✓ HOLE WON!';
+  if (holeResult === 'loss')   resultStr = '✗ HOLE LOST';
+  if (holeResult === 'halved') resultStr = '= HALVED';
+  var msg = 'You: ' + playerScore + ' (' + scoreName + ')  ' +
+            B.rival.name.split(' ')[0] + ': ' + rivalScore + ' (' + rivalScoreName + ')  ' + resultStr +
+            '  |  Match: ' + B.playerWins + ' – ' + B.rivalWins;
+
+  // Streak check
+  if (playerScore < par) {
+    B.streak = (B.streak > 0) ? B.streak + 1 : 1;
+  } else {
+    B.streak = 0;
+  }
+  renderStreakBadge(B.streak >= 3);
+
+  renderHPBars();
+  renderMomentumPips();
+
+  setBattleMsg(msg, false, function() {
+    // Frankie quip (30% chance)
+    if (Math.random() < 0.30) {
+      var quips = FRANKIE.quips[holeResult];
+      var quip = quips[rnd(0, quips.length - 1)];
+      setBattleMsg(FRANKIE.icon + ' Frankie: "' + quip + '"', false, function() {
+        checkMatchEnd();
+      });
+    } else {
+      checkMatchEnd();
+    }
+  });
+}
+
+function calculateHPDelta(score, par) {
+  var diff = score - par;
+  if (diff <= -2) return CONFIG.HP_EAGLE;
+  if (diff === -1) return CONFIG.HP_BIRDIE;
+  if (diff === 0) return 0;
+  return diff * CONFIG.HP_PER_OVER;
+}
+
+function applyHPChange(who, delta) {
+  if (who === 'player') {
+    B.playerHP = clamp(B.playerHP + delta, 0, CONFIG.HP_START);
+  } else {
+    B.rivalHP = clamp(B.rivalHP + delta, 0, CONFIG.HP_START);
+  }
+}
+
+function renderHPBars() {
+  if (!B) return;
+  var pPct = B.playerHP;
+  var rPct = B.rivalHP;
+
+  var pBar = safeGet('player-hp-bar');
+  var rBar = safeGet('rival-hp-bar');
+  var pLbl = safeGet('player-hp-label');
+  var rLbl = safeGet('rival-hp-label');
+
+  if (pBar) {
+    pBar.style.width = pPct + '%';
+    pBar.style.background = pPct > 60 ? '#50c878' : pPct > 30 ? '#c9a84c' : '#d63a3a';
+  }
+  if (rBar) {
+    rBar.style.width = rPct + '%';
+    rBar.style.background = rPct > 60 ? '#50c878' : rPct > 30 ? '#c9a84c' : '#d63a3a';
+  }
+  if (pLbl) pLbl.textContent = pPct;
+  if (rLbl) rLbl.textContent = rPct;
+}
+
+function renderMomentumPips() {
+  var container = safeGet('momentum-pips');
+  if (!container) return;
+  container.innerHTML = '';
+  var momentum = B ? B.momentum : 0;
+  for (var i = -4; i <= 4; i++) {
+    var pip = document.createElement('span');
+    pip.className = 'pip';
+    if (i === 0) pip.className += ' center';
+    if (i > 0 && i <= momentum) pip.className += ' active-pos';
+    if (i < 0 && i >= momentum) pip.className += ' active-neg';
+    container.appendChild(pip);
+  }
+}
+
+function renderStreakBadge(show) {
+  var badge = safeGet('streak-badge');
+  if (badge) badge.style.display = show ? 'inline' : 'none';
+}
+
+function updateMomentum(scoreDelta) {
+  if (scoreDelta < 0) {
+    B.momentum = clamp(B.momentum + 1, -4, 4);
+  } else if (scoreDelta > 0) {
+    B.momentum = clamp(B.momentum - 1, -4, 4);
+  }
+}
+
+function scoreToName(score, par) {
+  var diff = score - par;
+  if (diff <= -2) return 'EAGLE';
+  if (diff === -1) return 'BIRDIE';
+  if (diff === 0)  return 'PAR';
+  if (diff === 1)  return 'BOGEY';
+  if (diff === 2)  return 'DBL BOGEY';
+  return '+' + diff;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MATCH END
+// ═══════════════════════════════════════════════════════════════
+function checkMatchEnd() {
+  var remaining = B.totalHoles - B.currentHole;
+  var pw = B.playerWins;
+  var rw = B.rivalWins;
+  var toWin = B.toWin;
+
+  // Check if someone has already clinched
+  if (pw >= toWin || rw >= toWin ||
+      (rw + remaining < toWin && pw > rw) ||
+      (pw + remaining < toWin && rw > pw)) {
+    finishMatch();
+    return;
+  }
+
+  if (B.currentHole >= B.totalHoles) {
+    finishMatch();
+    return;
+  }
+
+  nextHole();
+}
+
+function finishMatch() {
+  stopBattleLoop();
+  var playerWon = B.playerWins > B.rivalWins;
+  var rivalId = B.rival.id;
+
+  if (playerWon) {
+    G.rivals[rivalId].wins = (G.rivals[rivalId].wins || 0) + 1;
+  } else {
+    G.rivals[rivalId].losses = (G.rivals[rivalId].losses || 0) + 1;
+  }
+
+  // Mark location beaten if player won
+  if (playerWon && locState[B.locId]) locState[B.locId].beaten = true;
+
+  // XP & cash
+  var tier = B.rival.tier || 1;
+  var xpGain = playerWon ? (50 + 10 * tier) : (20 + 5 * tier);
+  var cashGain = playerWon ? B.loc.prize : Math.floor(B.loc.prize * 0.1);
+  G.xp += xpGain;
+  G.cash += cashGain;
+
+  var resultWord = playerWon ? 'VICTORY!' : 'DEFEAT';
+  var resultColor = playerWon ? '#50c878' : '#d63a3a';
+  var endResult = safeGet('end-sc-result');
+  if (endResult) {
+    endResult.textContent = resultWord;
+    endResult.style.color = resultColor;
+  }
+  var endAwards = safeGet('end-sc-awards');
+  if (endAwards) endAwards.textContent = '+' + xpGain + ' XP  |  ' + formatCash(cashGain);
+
+  // Build end scorecard
+  renderEndScorecard();
+
+  openOverlay('overlay-end-scorecard');
+
+  // Wire continue button
+  var contBtn = safeGet('end-sc-continue');
+  if (contBtn) {
+    contBtn.onclick = null;
+    contBtn.addEventListener('click', function endScContinue() {
+      contBtn.removeEventListener('click', endScContinue);
+      closeOverlay('overlay-end-scorecard');
+      afterMatchFlow(playerWon, rivalId);
+    });
+  }
+}
+
+function renderEndScorecard() {
+  var tbody = safeGet('end-sc-body');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+  for (var i = 0; i < B.scoreHistory.length; i++) {
+    var row = B.scoreHistory[i];
+    var tr = document.createElement('tr');
+    var tdH = document.createElement('td'); tdH.textContent = row.hole;
+    var tdP = document.createElement('td'); tdP.textContent = row.par;
+    var tdY = document.createElement('td');
+    tdY.textContent = row.playerScore;
+    tdY.className = row.playerScore < row.par ? 'sc-win' : row.playerScore > row.par ? 'sc-loss' : '';
+    var tdR = document.createElement('td');
+    tdR.textContent = row.rivalScore;
+    tdR.className = row.rivalScore < row.par ? 'sc-win' : row.rivalScore > row.par ? 'sc-loss' : '';
+    var tdResult = document.createElement('td');
+    if (row.winner === 'win') { tdResult.textContent = '▲'; tdResult.className = 'sc-win'; }
+    else if (row.winner === 'loss') { tdResult.textContent = '▼'; tdResult.className = 'sc-loss'; }
+    else { tdResult.textContent = '='; tdResult.className = 'sc-halved'; }
+    tr.appendChild(tdH); tr.appendChild(tdP); tr.appendChild(tdY);
+    tr.appendChild(tdR); tr.appendChild(tdResult);
+    tbody.appendChild(tr);
+  }
+}
+
+function afterMatchFlow(playerWon, rivalId) {
+  // Unlock next course if applicable
+  if (playerWon) {
+    unlockNextCourse(B.locId);
+    checkBadges();
+  }
+
+  var rival = RIVALS_DATA[rivalId];
+  var postMsg = playerWon ? rival.postWin : rival.postLoss;
+  openDialogue([{speaker: rival.name, icon: rival.icon, text: postMsg}], function() {
+    if (playerWon && G.rivals[rivalId].wins === 1 && G.cards.indexOf(rivalId) < 0) {
+      showCardUnlock(rivalId, function() {
+        checkLevelUp(function() {
+          saveGame();
+          showScreen('screen-map');
+        });
+      });
+    } else {
+      checkLevelUp(function() {
+        saveGame();
+        showScreen('screen-map');
+      });
+    }
+  });
+  B = null;
+}
+
+function unlockNextCourse(locId) {
+  var unlockMap = {
+    'meadowbrook': 'parkview',
+    'parkview':    'munichamp',
+    'munichamp':   'nassau',
+    'nassau':      'liclassic',
+    'liclassic':   'groove',
+    'groove':      'countychamp',
+    'countychamp': 'empirestate',
+    'empirestate': 'nystate',
+    'nystate':     'commissioner'
+  };
+  var next = unlockMap[locId];
+  if (next && locState[next]) locState[next].unlocked = true;
+
+  // Tour progression
+  if (locId === 'munichamp') G.currentTour = 'county';
+  if (locId === 'countychamp') G.currentTour = 'state';
+}
+
+function checkBadges() {
+  if (locState['munichamp'] && locState['munichamp'].beaten && G.badges.indexOf('muni') < 0) {
+    G.badges.push('muni');
+    showToast('🟢 MUNI CHAMP badge earned!');
+  }
+  if (locState['countychamp'] && locState['countychamp'].beaten && G.badges.indexOf('county') < 0) {
+    G.badges.push('county');
+    showToast('🔵 COUNTY CHAMP badge earned!');
+  }
+  if (locState['nystate'] && locState['nystate'].beaten && G.badges.indexOf('state') < 0) {
+    G.badges.push('state');
+    showToast('🟡 STATE CHAMP badge earned!');
+  }
+  if (locState['commissioner'] && locState['commissioner'].beaten && G.badges.indexOf('commissioner') < 0) {
+    G.badges.push('commissioner');
+    showToast('⭐ COMMISSIONER badge earned!');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SCORECARD OVERLAY (during match)
+// ═══════════════════════════════════════════════════════════════
+function showScorecardOverlay() {
+  if (!B) return;
+  var tbody = safeGet('scorecard-body');
+  if (tbody) {
+    tbody.innerHTML = '';
+    for (var i = 0; i < B.scoreHistory.length; i++) {
+      var row = B.scoreHistory[i];
+      var tr = document.createElement('tr');
+      var tdH = document.createElement('td'); tdH.textContent = row.hole;
+      var tdP = document.createElement('td'); tdP.textContent = row.par;
+      var tdY = document.createElement('td');
+      tdY.textContent = row.playerScore;
+      tdY.className = row.playerScore < row.par ? 'sc-win' : row.playerScore > row.par ? 'sc-loss' : '';
+      var tdR = document.createElement('td');
+      tdR.textContent = row.rivalScore;
+      tdR.className = row.rivalScore < row.par ? 'sc-win' : row.rivalScore > row.par ? 'sc-loss' : '';
+      var tdResult = document.createElement('td');
+      if (row.winner === 'win') { tdResult.textContent = '▲'; tdResult.className = 'sc-win'; }
+      else if (row.winner === 'loss') { tdResult.textContent = '▼'; tdResult.className = 'sc-loss'; }
+      else { tdResult.textContent = '='; tdResult.className = 'sc-halved'; }
+      tr.appendChild(tdH); tr.appendChild(tdP); tr.appendChild(tdY);
+      tr.appendChild(tdR); tr.appendChild(tdResult);
+      tbody.appendChild(tr);
+    }
+  }
+  var statusEl = safeGet('scorecard-match-status');
+  if (statusEl && B) {
+    statusEl.textContent = 'You: ' + B.playerWins + '  Rival: ' + B.rivalWins + '  Halved: ' + B.holesHalved + '  (First to ' + B.toWin + ' wins)';
+  }
+  openOverlay('overlay-scorecard');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CARD UNLOCK
+// ═══════════════════════════════════════════════════════════════
+var _cardPanelIdx = 0;
+var _cardRivalId = null;
+var _cardCallback = null;
+
+function showCardUnlock(rivalId, callback) {
+  _cardRivalId = rivalId;
+  _cardCallback = callback;
+  var rival = RIVALS_DATA[rivalId];
+  _cardPanelIdx = 0;
+
+  // Rarity color
+  var rarColors = {common:'#50c878', uncommon:'#4488cc', rare:'#f5c518'};
+  var box = safeGet('card-unlock-box');
+  var rarEl = safeGet('card-unlock-rarity');
+  var nameEl = safeGet('card-unlock-name');
+  var iconEl = safeGet('card-unlock-icon');
+  var bodyEl = safeGet('card-unlock-body');
+
+  if (box) box.style.borderColor = rarColors[rival.card.rarity] || '#888';
+  if (rarEl) { rarEl.textContent = rival.card.rarity.toUpperCase() + ' CARD UNLOCKED'; rarEl.style.color = rarColors[rival.card.rarity]; }
+  if (nameEl) { nameEl.textContent = rival.name; nameEl.style.color = rarColors[rival.card.rarity]; }
+  if (iconEl) iconEl.textContent = rival.icon;
+
+  var panels = [
+    {body: buildBonusText(rival.card.bonus)},
+    {body: rival.bio},
+    {body: '"' + rival.card.flavour + '"'},
+    {body: FRANKIE.icon + ' Frankie: "That ' + Object.keys(rival.card.bonus)[0] + ' bonus is yours. Permanently."'}
+  ];
+
+  if (bodyEl) bodyEl.textContent = panels[0].body;
+  openOverlay('overlay-card');
+  _cardPanelIdx = 0;
+  _cardPanelData = panels;
+}
+
+var _cardPanelData = [];
+
+function cardTap() {
+  _cardPanelIdx++;
+  if (_cardPanelIdx >= _cardPanelData.length) {
+    // Apply card bonus
+    var rival = RIVALS_DATA[_cardRivalId];
+    var bkeys = Object.keys(rival.card.bonus);
+    for (var k = 0; k < bkeys.length; k++) {
+      var stat = bkeys[k];
+      if (G.stats[stat] !== undefined) {
+        G.stats[stat] = clamp(G.stats[stat] + rival.card.bonus[stat], 0, 100);
+      }
+    }
+    G.cards.push(_cardRivalId);
+    G.rivals[_cardRivalId].cardSeen = true;
+    closeOverlay('overlay-card');
+    if (_cardCallback) { var cb = _cardCallback; _cardCallback = null; cb(); }
+    return;
+  }
+  var bodyEl = safeGet('card-unlock-body');
+  if (bodyEl) bodyEl.textContent = _cardPanelData[_cardPanelIdx].body;
+}
+
+function buildBonusText(bonus) {
+  var parts = [];
+  var keys = Object.keys(bonus);
+  for (var k = 0; k < keys.length; k++) {
+    parts.push(keys[k].charAt(0).toUpperCase() + keys[k].slice(1) + ' +' + bonus[keys[k]]);
+  }
+  return 'STAT BONUS: ' + parts.join(', ');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// LEVEL UP
+// ═══════════════════════════════════════════════════════════════
+function checkLevelUp(callback) {
+  var threshold = XP_PER_LEVEL[G.level];
+  if (G.level < CONFIG.MAX_LEVEL && G.xp >= threshold) {
+    G.level++;
+    showLevelUp(callback);
+  } else {
+    if (callback) callback();
+  }
+}
+
+function showLevelUp(callback) {
+  var numEl  = safeGet('levelup-num');
+  var awEl   = safeGet('levelup-awards');
+  if (numEl) numEl.textContent = 'LEVEL ' + G.level;
+  if (awEl) awEl.textContent = 'Power: ' + G.stats.power + '  Accuracy: ' + G.stats.accuracy + '\nShort: ' + G.stats.shortGame + '  Mental: ' + G.stats.mental;
+  openOverlay('overlay-levelup');
+
+  var contBtn = safeGet('levelup-continue');
+  if (contBtn) {
+    contBtn.onclick = null;
+    contBtn.addEventListener('click', function lvlCont() {
+      contBtn.removeEventListener('click', lvlCont);
+      closeOverlay('overlay-levelup');
+      // Check again in case of multiple level ups
+      checkLevelUp(callback);
+    });
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INIT — WIRE ALL BUTTONS ONCE
+// ═══════════════════════════════════════════════════════════════
+function init() {
+  // Title
+  safeGet('btn-new-game').addEventListener('click', function() {
+    resetGame();
+    initLocState();
+    showScreen('screen-name');
+    var ni = safeGet('name-input');
+    if (ni) { ni.value = ''; setTimeout(function(){ ni.focus(); }, 200); }
+  });
+
+  safeGet('btn-continue').addEventListener('click', function() {
+    if (loadGame()) {
+      initLocState();
+      showScreen('screen-map');
+    }
+  });
+
+  // Name entry
+  safeGet('btn-name-confirm').addEventListener('click', function() {
+    var ni = safeGet('name-input');
+    var nm = ni ? ni.value.trim() : '';
+    if (!nm) nm = 'PLAYER';
+    if (nm.length > CONFIG.MAX_NAME_LEN) nm = nm.substring(0, CONFIG.MAX_NAME_LEN);
+    G.name = nm.toUpperCase();
+    saveGame();
+    // Frankie intro
+    var panels = [];
+    for (var i = 0; i < FRANKIE.intro.length; i++) {
+      panels.push({speaker: FRANKIE.name, icon: FRANKIE.icon, text: FRANKIE.intro[i]});
+    }
+    // Show name screen first, then dialogue
+    showScreen('screen-name');
+    openDialogue(panels, function() {
+      showScreen('screen-map');
+    });
+  });
+
+  var ni2 = safeGet('name-input');
+  if (ni2) {
+    ni2.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') safeGet('btn-name-confirm').click();
+    });
+  }
+
+  // Map buttons
+  safeGet('btn-cards').addEventListener('click', function() { showCards(); });
+  safeGet('btn-me').addEventListener('click', function() { showPlayerCard(); });
+  safeGet('btn-shop').addEventListener('click', function() { showShop(); });
+
+  // Location screen
+  safeGet('btn-enter').addEventListener('click', function() {
+    if (!_currentLocId) return;
+    var ls = locState[_currentLocId];
+    var rival = RIVALS_DATA[LOCATIONS[_currentLocId].rivalId];
+    var firstVisit = !G.rivals[rival.id] || !G.rivals[rival.id].met;
+    if (firstVisit) {
+      showEncounter(_currentLocId);
+    } else {
+      // Frankie pep talk
+      openDialogue([
+        {speaker: FRANKIE.name, icon: FRANKIE.icon, text: getFrankieLine()},
+        {speaker: rival.name, icon: rival.icon, text: rival.preRound[rnd(0, rival.preRound.length - 1)]}
+      ], function() {
+        startBattle(_currentLocId);
+      });
+    }
+  });
+
+  safeGet('btn-loc-back').addEventListener('click', function() { showScreen('screen-map'); });
+
+  // Encounter screen
+  safeGet('btn-accept').addEventListener('click', function() {
+    if (!_currentLocId) return;
+    var rival = RIVALS_DATA[LOCATIONS[_currentLocId].rivalId];
+    closeOverlay('overlay-dialogue');
+    openDialogue([
+      {speaker: FRANKIE.name, icon: FRANKIE.icon, text: getFrankieLine()},
+      {speaker: rival.name, icon: rival.icon, text: rival.preRound[rnd(0, rival.preRound.length - 1)]}
+    ], function() {
+      startBattle(_currentLocId);
+    });
+  });
+
+  safeGet('btn-not-today').addEventListener('click', function() {
+    closeOverlay('overlay-dialogue');
+    showScreen('screen-map');
+  });
+
+  // Dialogue tap
+  safeGet('overlay-dialogue').addEventListener('click', dlgTap);
+
+  // Message box tap
+  safeGet('msg-box').addEventListener('click', msgTap);
+
+  // Shape buttons
+  safeGet('shape-draw').addEventListener('click', function() { pickShape('draw'); });
+  safeGet('shape-straight').addEventListener('click', function() { pickShape('straight'); });
+  safeGet('shape-fade').addEventListener('click', function() { pickShape('fade'); });
+
+  // Swing button
+  safeGet('swing-action-btn').addEventListener('click', function() {
+    var btn = safeGet('swing-action-btn');
+    if (!btn) return;
+    if (btn.textContent === 'SWING') {
+      btn.textContent = 'STOP';
+      startNeedle();
+    } else {
+      stopNeedle();
+    }
+  });
+
+  // Main swing button (on battle screen)
+  safeGet('swing-btn').addEventListener('click', function() {
+    if (!_selectedMove) return;
+    if (B && B.holeYardsLeft <= CONFIG.PUTT_RANGE) {
+      openPutt(function(quality) {
+        B.holeStrokes++;
+        if (quality === 'PERFECT' || (quality === 'GREAT' && B.holeYardsLeft <= 8)) {
+          B.holeYardsLeft = 0;
+          rivalTakeTurn();
+        } else {
+          B.holeYardsLeft = Math.max(1, Math.floor(B.holeYardsLeft * 0.3));
+          B.lie = 'fringe';
+          renderMoves();
+        }
+      });
+    } else {
+      openSwing();
+    }
+  });
+
+  // Scorecard button (during battle)
+  safeGet('scorecard-btn').addEventListener('click', showScorecardOverlay);
+  safeGet('scorecard-close').addEventListener('click', function() { closeOverlay('overlay-scorecard'); });
+
+  // Putting tap
+  safeGet('putt-canvas').addEventListener('click', puttTap);
+  safeGet('putt-canvas').addEventListener('touchend', function(e) { e.preventDefault(); puttTap(); });
+
+  // Card tap
+  safeGet('overlay-card').addEventListener('click', cardTap);
+
+  // Shop tabs
+  var shopTabEls = document.querySelectorAll('.shop-tab');
+  for (var t = 0; t < shopTabEls.length; t++) {
+    (function(tab) {
+      tab.addEventListener('click', function() { renderShopTab(tab.getAttribute('data-tab')); });
+    })(shopTabEls[t]);
+  }
+
+  safeGet('shop-back').addEventListener('click', function() { showScreen('screen-map'); });
+
+  // Cards back
+  safeGet('cards-back').addEventListener('click', function() { showScreen('screen-map'); });
+
+  // Player card back
+  safeGet('player-card-back').addEventListener('click', function() { showScreen('screen-map'); });
+
+  // Screen hooks
+  SCREEN_HOOKS['screen-map'] = { enter: enterMap, exit: exitMap };
+
+  // Generate battle trees once
+  generateBattleTrees();
+
+  // Check for existing save
+  if (loadGame()) {
+    initLocState();
+    var continueBtn = safeGet('btn-continue');
+    if (continueBtn) continueBtn.style.display = 'block';
+  } else {
+    var continueBtn2 = safeGet('btn-continue');
+    if (continueBtn2) continueBtn2.style.display = 'none';
+  }
+}
+
+window.addEventListener('load', init);
+
+</script>
+</body>
+</html>
