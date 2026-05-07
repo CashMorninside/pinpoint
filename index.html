@@ -2426,7 +2426,7 @@ function drawBattleCanvas(ts) {
   // ── LIE INDICATOR ──
   if (B) {
     var lie = LIES[B.lie];
-    var ballX = 80, ballY = 158;
+    var ballX = 130, ballY = 162;
     ctx.strokeStyle = lie.color;
     ctx.lineWidth = 2;
     ctx.globalAlpha = 0.75;
@@ -2535,35 +2535,39 @@ function drawBattleCanvas(ts) {
     ctx.fillRect(0, 152, W, 26);
   }
 
-  // ── RIVAL SPRITE (mid-distance, right side of fairway) ──
+  // ── RIVAL SPRITE (mid-fairway, facing flag — back view) ──
   ctx.save();
-  ctx.scale(0.85, 0.85);
-  var rivalX = Math.floor(310 / 0.85);
-  var rivalGroundY = Math.floor(118 / 0.85);
-  ctx.fillStyle = 'rgba(0,0,0,0.28)';
+  ctx.scale(0.60, 0.60);
+  var rivalX = Math.floor(200 / 0.60);
+  var rivalGroundY = Math.floor(120 / 0.60);
+  ctx.fillStyle = 'rgba(0,0,0,0.22)';
   ctx.beginPath();
   ctx.ellipse(rivalX, rivalGroundY + 2, 10, 4, 0, 0, 6.283);
   ctx.fill();
   if (_rivalSwingFrame === 5) {
     ctx.save(); ctx.globalAlpha = 0.20;
-    drawGolfer(ctx, rivalX, rivalGroundY, 4, false, B.rival.color);
+    drawGolferBack(ctx, rivalX, rivalGroundY, 4, B.rival.color);
     ctx.restore();
   }
-  drawGolfer(ctx, rivalX, rivalGroundY, _rivalSwingFrame, false, B.rival.color);
+  drawGolferBack(ctx, rivalX, rivalGroundY, _rivalSwingFrame, B.rival.color);
   ctx.restore();
 
-  // ── PLAYER SPRITE (foreground left) ──
-  var playerX = 80, playerGroundY = 162;
-  ctx.fillStyle = 'rgba(0,0,0,0.35)';
+  // ── PLAYER SPRITE (foreground, back-view — camera is behind player) ──
+  var playerX = 130, playerGroundY = 172;
+  ctx.fillStyle = 'rgba(0,0,0,0.40)';
   ctx.beginPath();
-  ctx.ellipse(playerX, playerGroundY + 2, 13, 5, 0, 0, 6.283);
+  ctx.ellipse(playerX, playerGroundY + 2, 17, 6, 0, 0, 6.283);
   ctx.fill();
+  ctx.save();
+  ctx.translate(playerX, playerGroundY);
+  ctx.scale(1.28, 1.28);
   if (_playerSwingFrame === 5) {
     ctx.save(); ctx.globalAlpha = 0.20;
-    drawGolfer(ctx, playerX, playerGroundY, 4, true, '#50c878');
+    drawGolferBack(ctx, 0, 0, 4, '#50c878');
     ctx.restore();
   }
-  drawGolfer(ctx, playerX, playerGroundY, _playerSwingFrame, true, '#50c878');
+  drawGolferBack(ctx, 0, 0, _playerSwingFrame, '#50c878');
+  ctx.restore();
 
   // ── TV SCORE BUG (broadcast-style HUD) ──
   if (B) {
@@ -2959,7 +2963,129 @@ function drawGolfer(ctx, x, y, frame, facingRight, color) {
   ctx.restore();
 }
 
-var _impactFlash = 0;
+// Back-view golfer — camera is behind the player looking toward the flag
+function drawGolferBack(ctx, x, y, frame, color) {
+  // arm: angle of arms from straight-down (positive = trail/right side = backswing)
+  // club: angle of club shaft from vertical (pointing up = 0°)
+  var frames = [
+    {arm:  22, club:  87},   // 0 address
+    {arm:  50, club:  52},   // 1 takeaway
+    {arm:  88, club:  16},   // 2 backswing
+    {arm: 118, club: -16},   // 3 top
+    {arm:  74, club:  36},   // 4 transition
+    {arm:  14, club:  89},   // 5 impact
+    {arm:-108, club: 128}    // 6 finish
+  ];
+  var fd = frames[Math.max(0, Math.min(frame, 6))];
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+
+  var PI  = Math.PI;
+  var D2R = PI / 180;
+  var armA  = fd.arm  * D2R;
+  var leadA = fd.arm  * 0.72 * D2R;
+  var clubA = fd.club * D2R;
+  var armLen = 14, clubLen = 26;
+
+  var shirtColor = color;
+  var shirtDark  = _darkenColor(color, 40);
+  var pantColor  = '#2a4a8a';
+  var pantDark   = '#1a2e6a';
+  var shoeColor  = '#1a1212';
+  var skinColor  = '#e8c4a0';
+  var capColor   = _darkenColor(color, 20);
+  var capBrim    = _darkenColor(color, 50);
+
+  var shouldY = -34;
+  var rShldX = -9, lShldX = 9;
+
+  // Trail arm (right from our view) swings back/up during backswing
+  var trailX = rShldX + Math.sin(armA)  * armLen;
+  var trailY = shouldY + Math.cos(armA)  * armLen;
+  // Lead arm (left from our view) follows at ~72% rotation
+  var leadX  = lShldX + Math.sin(leadA) * (armLen - 1);
+  var leadY  = shouldY + Math.cos(leadA) * (armLen - 1);
+
+  var handsX = (trailX + leadX) / 2;
+  var handsY = (trailY + leadY) / 2;
+  var clubEndX = handsX + Math.sin(clubA) * clubLen;
+  var clubEndY = handsY - Math.cos(clubA) * clubLen;
+
+  // ── FEET ──
+  ctx.fillStyle = shoeColor;
+  ctx.beginPath(); ctx.ellipse(-8, 0, 7, 2.5, 0.15, 0, PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse( 8, 0, 7, 2.5,-0.15, 0, PI*2); ctx.fill();
+
+  // ── LEGS ──
+  ctx.strokeStyle = pantDark; ctx.lineWidth = 5;
+  ctx.beginPath(); ctx.moveTo(-7, 0); ctx.lineTo(-5, -18); ctx.stroke();
+  ctx.strokeStyle = pantColor; ctx.lineWidth = 6;
+  ctx.beginPath(); ctx.moveTo( 7, 0); ctx.lineTo( 5, -18); ctx.stroke();
+
+  // ── TRAIL ARM (behind torso) ──
+  ctx.strokeStyle = shirtDark; ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.moveTo(rShldX, shouldY); ctx.lineTo(trailX, trailY); ctx.stroke();
+
+  // ── CLUB ──
+  ctx.strokeStyle = '#2a1800'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(handsX, handsY);
+  var gripEndX = handsX + Math.sin(clubA) * 6;
+  var gripEndY = handsY - Math.cos(clubA) * 6;
+  ctx.lineTo(gripEndX, gripEndY); ctx.stroke();
+  ctx.strokeStyle = '#b8b8b8'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(gripEndX, gripEndY); ctx.lineTo(clubEndX, clubEndY); ctx.stroke();
+  ctx.fillStyle = '#888888';
+  ctx.beginPath(); ctx.arc(clubEndX, clubEndY, 3, 0, PI*2); ctx.fill();
+
+  // ── BELT ──
+  ctx.fillStyle = '#3a2800'; ctx.fillRect(-9, -21, 18, 3);
+  ctx.fillStyle = '#c8a840'; ctx.fillRect(-3, -21, 6, 3);
+
+  // ── TORSO (back of shirt) ──
+  ctx.fillStyle = shirtColor;
+  ctx.beginPath();
+  ctx.moveTo(-9, -18); ctx.lineTo(9, -18);
+  ctx.lineTo(11, -36); ctx.lineTo(-11, -36);
+  ctx.closePath(); ctx.fill();
+  ctx.fillStyle = shirtDark;
+  ctx.beginPath();
+  ctx.moveTo(1, -18); ctx.lineTo(3, -18); ctx.lineTo(4, -36); ctx.lineTo(2, -36);
+  ctx.closePath(); ctx.fill();
+
+  // ── LEAD ARM (in front of torso) ──
+  ctx.strokeStyle = shirtColor; ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.moveTo(lShldX, shouldY); ctx.lineTo(leadX, leadY); ctx.stroke();
+  ctx.fillStyle = '#f0f0ee';
+  ctx.beginPath(); ctx.arc(handsX, handsY, 3.5, 0, PI*2); ctx.fill();
+
+  // ── NECK ──
+  ctx.fillStyle = skinColor;
+  ctx.beginPath(); ctx.ellipse(0, -38, 3.5, 3, 0, 0, PI*2); ctx.fill();
+
+  // ── HEAD (back of head) ──
+  ctx.fillStyle = skinColor;
+  ctx.beginPath(); ctx.arc(0, -45, 7, 0, PI*2); ctx.fill();
+
+  // ── CAP (from behind) ──
+  ctx.fillStyle = capColor;
+  ctx.beginPath();
+  ctx.arc(0, -47, 9, PI, 0); ctx.lineTo(9, -44); ctx.lineTo(-9, -44); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = capBrim;
+  ctx.beginPath(); ctx.ellipse(0, -43, 10, 3, 0, 0, PI); ctx.fill();
+  ctx.fillStyle = _lightenColor(capColor, 30);
+  ctx.beginPath(); ctx.arc(0, -55, 2, 0, PI*2); ctx.fill();
+
+  // ── IMPACT FLASH ──
+  if (frame === 5 && _impactFlash) {
+    ctx.globalAlpha = _impactFlash;
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath(); ctx.arc(clubEndX, clubEndY, 10, 0, PI*2); ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+
+  ctx.restore();
+}
 var _impactFlashTimer = null;
 
 function triggerImpactFlash() {
@@ -3740,16 +3866,16 @@ function playerShotResult(quality, shapeId) {
 }
 
 function animateBallFlight(quality, distYards, callback) {
-  var startX = 90;
-  var startY = 155;
+  var startX = 130;
+  var startY = 160;
   var range = Math.min(distYards / 300, 1);
-  // Ball travels into background along perspective fairway: player(80,162) → flag(277,104)
-  var endX = Math.floor(80 + 197 * range * 0.92);
-  var endY = Math.floor(162 - 58  * range * 0.92);
+  // Ball travels into background: player(130,172) → flag(277,104)
+  var endX = Math.floor(130 + 147 * range * 0.92);
+  var endY = Math.floor(172 - 68  * range * 0.92);
 
   if (quality === 'MISHIT') {
-    endX = Math.floor(80 + 197 * range * 0.55) + rnd(-15, 15);
-    endY = Math.floor(162 - 58  * range * 0.55) + rnd(-8, 8);
+    endX = Math.floor(130 + 147 * range * 0.55) + rnd(-15, 15);
+    endY = Math.floor(172 - 68  * range * 0.55) + rnd(-8, 8);
   }
 
   _ballAnim = {
