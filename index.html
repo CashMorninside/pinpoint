@@ -1364,7 +1364,7 @@ function resetGame() {
   locState = {};
   // unlock muni courses
   locState['meadowbrook'] = {beaten:false, unlocked:true};
-  locState['parkview']    = {beaten:false, unlocked:false};
+  locState['parkview']    = {beaten:false, unlocked:true};
   locState['munichamp']   = {beaten:false, unlocked:false};
 }
 
@@ -1375,8 +1375,9 @@ function initLocState() {
     if (!locState[lid]) locState[lid] = {beaten:false, unlocked:false};
   }
   // ensure muni is unlocked if fresh
-  if (!locState['meadowbrook'].unlocked && G.currentTour === 'muni') {
-    locState['meadowbrook'].unlocked = true;
+  if (G.currentTour === 'muni') {
+    if (!locState['meadowbrook'].unlocked) locState['meadowbrook'].unlocked = true;
+    if (!locState['parkview'].unlocked) locState['parkview'].unlocked = true;
   }
 }
 
@@ -1465,7 +1466,12 @@ function typeNextChar() {
   }
 }
 
+var _dlgLastTap = 0;
 function dlgTap() {
+  // Debounce: touchend + click both fire on mobile; ignore if <120ms apart
+  var now = Date.now();
+  if (now - _dlgLastTap < 120) return;
+  _dlgLastTap = now;
   if (_dlgTyping) {
     // skip to full text
     clearInterval(_dlgTimer);
@@ -2453,7 +2459,7 @@ function drawBattleCanvas(ts) {
     ctx.beginPath();
     ctx.moveTo(trail.startX, trail.startY);
     var cpx = (trail.startX + trail.endX) / 2;
-    var cpy = Math.min(trail.startY, trail.endY) - 40;
+    var cpy = 22;
     ctx.quadraticCurveTo(cpx, cpy, trail.endX, trail.endY);
     ctx.stroke();
     ctx.setLineDash([]);
@@ -2467,13 +2473,14 @@ function drawBattleCanvas(ts) {
       _ballAnim = null;
     } else {
       var bx = lerp(_ballAnim.startX, _ballAnim.endX, elapsed);
-      var arcH = 55 + (_ballAnim.endX - _ballAnim.startX) * 0.12;
+      var arcH = 110;
       var by = lerp(_ballAnim.startY, _ballAnim.endY, elapsed) - Math.sin(3.14159 * elapsed) * arcH;
+      var ballR = lerp(4, 2, elapsed);
       ctx.fillStyle = '#ffffff';
-      ctx.shadowBlur = 5;
+      ctx.shadowBlur = lerp(6, 3, elapsed);
       ctx.shadowColor = '#ffffff';
       ctx.beginPath();
-      ctx.arc(bx, by, 4, 0, 6.283);
+      ctx.arc(bx, by, ballR, 0, 6.283);
       ctx.fill();
       ctx.shadowBlur = 0;
     }
@@ -2516,6 +2523,11 @@ function drawBattleCanvas(ts) {
   ctx.beginPath();
   ctx.ellipse(rivalX, rivalGroundY + 2, 10, 4, 0, 0, 6.283);
   ctx.fill();
+  if (_rivalSwingFrame === 5) {
+    ctx.save(); ctx.globalAlpha = 0.20;
+    drawGolfer(ctx, rivalX, rivalGroundY, 4, false, B.rival.color);
+    ctx.restore();
+  }
   drawGolfer(ctx, rivalX, rivalGroundY, _rivalSwingFrame, false, B.rival.color);
   ctx.restore();
 
@@ -2525,6 +2537,11 @@ function drawBattleCanvas(ts) {
   ctx.beginPath();
   ctx.ellipse(playerX, playerGroundY + 2, 13, 5, 0, 0, 6.283);
   ctx.fill();
+  if (_playerSwingFrame === 5) {
+    ctx.save(); ctx.globalAlpha = 0.20;
+    drawGolfer(ctx, playerX, playerGroundY, 4, true, '#50c878');
+    ctx.restore();
+  }
   drawGolfer(ctx, playerX, playerGroundY, _playerSwingFrame, true, '#50c878');
 
   // ── TV SCORE BUG (broadcast-style HUD) ──
@@ -3685,12 +3702,13 @@ function animateBallFlight(quality, distYards, callback) {
   var startX = 90;
   var startY = 155;
   var range = Math.min(distYards / 300, 1);
-  var endX = 130 + Math.floor(range * 180);
-  var endY = 155;
+  // Ball travels into background along perspective fairway: player(80,162) → flag(277,104)
+  var endX = Math.floor(80 + 197 * range * 0.92);
+  var endY = Math.floor(162 - 58  * range * 0.92);
 
   if (quality === 'MISHIT') {
-    endX = 130 + Math.floor(range * 100);
-    endY = 160 + rnd(0, 10);
+    endX = Math.floor(80 + 197 * range * 0.55) + rnd(-15, 15);
+    endY = Math.floor(162 - 58  * range * 0.55) + rnd(-8, 8);
   }
 
   _ballAnim = {
@@ -4067,9 +4085,17 @@ function afterMatchFlow(playerWon, rivalId) {
 }
 
 function unlockNextCourse(locId) {
+  // Muni openers: munichamp only unlocks when BOTH meadowbrook AND parkview are beaten
+  if (locId === 'meadowbrook' || locId === 'parkview') {
+    var mDone = locState['meadowbrook'] && locState['meadowbrook'].beaten;
+    var pDone = locState['parkview']    && locState['parkview'].beaten;
+    if (mDone && pDone && locState['munichamp']) {
+      locState['munichamp'].unlocked = true;
+    }
+    return;
+  }
+
   var unlockMap = {
-    'meadowbrook': 'parkview',
-    'parkview':    'munichamp',
     'munichamp':   'nassau',
     'nassau':      'liclassic',
     'liclassic':   'groove',
