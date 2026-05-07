@@ -2535,39 +2535,31 @@ function drawBattleCanvas(ts) {
     ctx.fillRect(0, 152, W, 26);
   }
 
-  // ── RIVAL SPRITE (mid-fairway, facing flag — back view) ──
-  ctx.save();
-  ctx.scale(0.60, 0.60);
-  var rivalX = Math.floor(200 / 0.60);
-  var rivalGroundY = Math.floor(120 / 0.60);
+  // ── RIVAL SPRITE (mid-fairway, pixel art back-view) ──
+  var rivalX = 200, rivalGroundY = 120;
   ctx.fillStyle = 'rgba(0,0,0,0.22)';
   ctx.beginPath();
   ctx.ellipse(rivalX, rivalGroundY + 2, 10, 4, 0, 0, 6.283);
   ctx.fill();
   if (_rivalSwingFrame === 5) {
     ctx.save(); ctx.globalAlpha = 0.20;
-    drawGolferBack(ctx, rivalX, rivalGroundY, 4, B.rival.color);
+    drawGolferPixel(ctx, rivalX, rivalGroundY, 4, B.rival.color, 2);
     ctx.restore();
   }
-  drawGolferBack(ctx, rivalX, rivalGroundY, _rivalSwingFrame, B.rival.color);
-  ctx.restore();
+  drawGolferPixel(ctx, rivalX, rivalGroundY, _rivalSwingFrame, B.rival.color, 2);
 
-  // ── PLAYER SPRITE (foreground, back-view — camera is behind player) ──
+  // ── PLAYER SPRITE (foreground, pixel art back-view) ──
   var playerX = 130, playerGroundY = 172;
   ctx.fillStyle = 'rgba(0,0,0,0.40)';
   ctx.beginPath();
   ctx.ellipse(playerX, playerGroundY + 2, 17, 6, 0, 0, 6.283);
   ctx.fill();
-  ctx.save();
-  ctx.translate(playerX, playerGroundY);
-  ctx.scale(1.28, 1.28);
   if (_playerSwingFrame === 5) {
     ctx.save(); ctx.globalAlpha = 0.20;
-    drawGolferBack(ctx, 0, 0, 4, '#50c878');
+    drawGolferPixel(ctx, playerX, playerGroundY, 4, '#50c878', 3);
     ctx.restore();
   }
-  drawGolferBack(ctx, 0, 0, _playerSwingFrame, '#50c878');
-  ctx.restore();
+  drawGolferPixel(ctx, playerX, playerGroundY, _playerSwingFrame, '#50c878', 3);
 
   // ── TV SCORE BUG (broadcast-style HUD) ──
   if (B) {
@@ -3086,6 +3078,104 @@ function drawGolferBack(ctx, x, y, frame, color) {
 
   ctx.restore();
 }
+
+var GOLFER_SPRITE_FRAMES = (function() {
+  var H = [
+    '....cccccccc....','...cccccccccc...',
+    '...hhhhhhhhhh...','..hhhhhhhhhhhh..','..hhhhhhhhhhhh..','...hhhhhhhhhh...',
+    '.....nnnnnn.....','...tttttttttt...','..tttttttttttt..',
+  ];
+  var L = [
+    '...pppppppppp...','...pppppppppp...',
+    '..kpppp..ppppk..','..kppp....pppk..','..kppp....pppk..','..kppp....pppk..',
+    '..kppp....pppk..','..kppp....pppk..','..ksss....sssk..',
+    '.sssss....sssss.','.sssss....sssss.','..ssss....ssss..','................',
+  ];
+  var A = [
+    [ // F0 address
+      '..attttdtttdtta.','..attttdtttdtta.','..attttdtttdtta.',
+      '..attttdtttdtta.','..attttdtttdtta.',
+      '..gttttttttttg..','...jeeeeweeeej..','...pppppppppp...','...pppppppppp...','...pppppppppp...',
+    ],
+    [ // F1 takeaway
+      '.aattttdtttdttt.','aa.tttdtttdtttt.','la..ttdtttdtttt.',
+      '.l.atttdtttdtttg','...atttdtttdtttg',
+      '...gttdttttdttg.','...jeeeeweeeej..','...pppppppppp...','...pppppppppp...','...pppppppppp...',
+    ],
+    [ // F2 backswing
+      'fla.tttdtttdtttt','.la.tttdtttdtttt','.la.tttdtttdtttt',
+      '..a.tttdtttdtttt','...attttttttttga',
+      '...gttttttttttg.','...jeeeeweeeej..','...pppppppppp...','...pppppppppp...','...pppppppppp...',
+    ],
+    [ // F3 top
+      'fjlaaatttdtttttt','.flaaatttdtttttt','...aa.ttdttttttt',
+      '....a.ttdttttttt','....g.ttdtttttga',
+      '.....jttdtttttg.','.....jeeeeweee..','....pppppppppp..','...ppppppppppp..','...ppppppppppp..',
+    ],
+    [ // F4 transition
+      '..alla.dtttdtttt','..alla.dtttdtttt','..alla.dtttdtttt',
+      '...lla.dtttdtttg','....la.dtttdtttg',
+      '.....jgdtttdttg.','.....leeeeweeeg.','.....lppppppppp.','....lppppppppp..','...pppppppppp...',
+    ],
+    [ // F5 impact
+      '..tttdtttdtttaa.','..tttdtttdtttaa.','..tttdtttdtttaa.',
+      '..tttdtttdtttga.','..tttdtttdttjl..',
+      '..tttdtttdttlf..','...eeeeweeeej...','...pppppppppp...','...pppppppppp...','...pppppppppp...',
+    ],
+    [ // F6 finish
+      '..tttdtttdttfla.','..tttdtttdttlja.','..tttdtttdttlja.',
+      '..tttdtttdttlga.','..tttdtttdttjg..',
+      '..tttdtttdttja..','...eeeeweeeej...','...pppppppppp...','...pppppppppp...','...pppppppppp...',
+    ],
+  ];
+  var frames = [];
+  for (var fi = 0; fi < 7; fi++) {
+    var frame = [];
+    var ri;
+    for (ri = 0; ri < 9; ri++) frame.push(H[ri]);
+    for (ri = 0; ri < 10; ri++) frame.push(A[fi][ri]);
+    for (ri = 0; ri < 13; ri++) frame.push(L[ri]);
+    frames.push(frame);
+  }
+  return frames;
+})();
+
+function drawGolferPixel(ctx, cx, cy, frame, teamColor, scale) {
+  if (scale === undefined) scale = 3;
+  var tc = teamColor || '#50c878';
+  var td = _darkenColor(tc, 40);
+  var P = {
+    'c': tc, 'h': '#d4a574', 'n': '#d4a574',
+    't': tc, 'd': td, 'a': tc, 'g': '#f0f0ee',
+    'e': '#3a2800', 'w': '#c8a840',
+    'p': '#2a4a8a', 'k': '#1a2e6a', 's': '#1a1212',
+    'l': '#c0c0c0', 'j': '#2a1800', 'f': '#888888'
+  };
+  var rows = GOLFER_SPRITE_FRAMES[Math.max(0, Math.min(frame, 6))];
+  var ox = Math.floor(cx) - 8 * scale;
+  var oy = Math.floor(cy) - 32 * scale;
+  for (var r = 0; r < rows.length; r++) {
+    var row = rows[r];
+    for (var c = 0; c < 16; c++) {
+      var ch = row[c];
+      if (ch === '.') continue;
+      var color = P[ch];
+      if (!color) continue;
+      ctx.fillStyle = color;
+      ctx.fillRect(ox + c * scale, oy + r * scale, scale, scale);
+    }
+  }
+  if (frame === 5 && _impactFlash) {
+    ctx.save();
+    ctx.globalAlpha = _impactFlash;
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(ox + 13 * scale, oy + 14 * scale, 5 * scale, 0, 6.283);
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
 var _impactFlashTimer = null;
 
 function triggerImpactFlash() {
