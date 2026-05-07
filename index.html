@@ -2097,6 +2097,8 @@ var _battleCanvas = null;
 var _battleCtx = null;
 var _battleRAF = null;
 var _battleTrees = [];
+var _leftTrees   = [];
+var _rightTrees  = [];
 var _shotTrails = [];   // {startX,startY,endX,endY,opacity}
 var _ballAnim = null;   // {x,y,progress,startX,startY,endX,endY,startTime}
 var _playerSwingFrame = 0;
@@ -2271,54 +2273,69 @@ function drawBattleCanvas(ts) {
   drawCloud(ctx, 345 + Math.sin(ts / 7400 + 2.5) * 11, 33, 32, 14);
   ctx.globalAlpha = 1;
 
-  // ── TREE LINE (horizon) ──
+  // ── ROUGH/FOREST FILL (everything below sky is forest-dark until fairway draws over) ──
+  ctx.fillStyle = '#1a341a';
+  ctx.fillRect(0, 86, W, H - 86);
+
+  // Pine tree helper (draws a single perspective-scaled pine)
+  var _pine = function(tx, ty, h, hw, dark) {
+    // Trunk
+    ctx.fillStyle = '#0a140a';
+    ctx.fillRect(tx - 2, ty - Math.min(h * 0.12, 8), 4, Math.min(h * 0.12, 8) + 1);
+    // Shadow canopy (right face)
+    ctx.fillStyle = dark ? '#132413' : '#1c3a1c';
+    ctx.beginPath();
+    ctx.moveTo(tx, ty - h);
+    ctx.lineTo(tx - hw, ty);
+    ctx.lineTo(tx + hw, ty);
+    ctx.closePath();
+    ctx.fill();
+    // Lit canopy (left face highlight)
+    ctx.fillStyle = dark ? '#223222' : '#2e502e';
+    ctx.beginPath();
+    ctx.moveTo(tx, ty - h);
+    ctx.lineTo(tx - hw * 0.09, ty - h * 0.24);
+    ctx.lineTo(tx - hw, ty);
+    ctx.closePath();
+    ctx.fill();
+  };
+
+  // ── BACKGROUND HORIZON TREELINE (small, full width) ──
   for (var t = 0; t < _battleTrees.length; t++) {
     var tr = _battleTrees[t];
-    // Trunk
-    ctx.fillStyle = '#0d1e0d';
-    ctx.fillRect(tr.x - 2, tr.y + 1, 4, 8);
-    // Canopy shadow layer
-    ctx.fillStyle = tr.dark ? '#122212' : '#1a3a1a';
-    ctx.beginPath();
-    ctx.moveTo(tr.x, tr.y - tr.h);
-    ctx.lineTo(tr.x - tr.h * 0.58, tr.y + 4);
-    ctx.lineTo(tr.x + tr.h * 0.58, tr.y + 4);
-    ctx.closePath();
-    ctx.fill();
-    // Canopy highlight (left-lit)
-    ctx.fillStyle = tr.dark ? '#1e3a1e' : '#2d5a2d';
-    ctx.beginPath();
-    ctx.moveTo(tr.x, tr.y - tr.h);
-    ctx.lineTo(tr.x - tr.h * 0.08, tr.y - tr.h * 0.25);
-    ctx.lineTo(tr.x - tr.h * 0.58, tr.y + 4);
-    ctx.closePath();
-    ctx.fill();
+    _pine(tr.x, tr.y + 4, tr.h, tr.h * 0.50, tr.dark);
   }
 
-  // ── ROUGH BACKGROUND (below treeline) ──
-  ctx.fillStyle = '#234a23';
-  ctx.fillRect(0, 90, W, H - 90);
+  // ── LEFT TREE WALL (far→near so closer trees overlap farther ones) ──
+  for (var lt = 0; lt < _leftTrees.length; lt++) {
+    var ltr = _leftTrees[lt];
+    _pine(ltr.x, ltr.groundY, ltr.h, ltr.hw, ltr.dark);
+  }
 
-  // ── GALLERY CROWDS (between treeline and fairway edge) ──
-  // Left gallery
+  // ── RIGHT TREE WALL ──
+  for (var rt = 0; rt < _rightTrees.length; rt++) {
+    var rtr = _rightTrees[rt];
+    _pine(rtr.x, rtr.groundY, rtr.h, rtr.hw, rtr.dark);
+  }
+
+  // ── GALLERY CROWDS (thin strip between tree wall and fairway, at horizon) ──
+  // Left gallery — between canvas left edge and farL
   var galGroundY = 97;
-  for (var gla = 0; gla < 12; gla++) {
-    var glx = gla * 13 + 5;
-    if (glx >= farL - 4) break;
-    var glh = 9 + ((gla * 11) % 5);
-    var glw = 5 + ((gla * 7)  % 3);
-    ctx.fillStyle = 'rgba(8,18,8,0.6)';
-    ctx.fillRect(glx - glw / 2, galGroundY - glh, glw, glh);
+  for (var gla = 0; gla < 8; gla++) {
+    var glx = gla * 11 + 5;
+    if (glx >= farL - 2) break;
+    var glh = 8 + ((gla * 11) % 5);
+    ctx.fillStyle = 'rgba(20,44,20,0.85)';
+    ctx.fillRect(glx - 2, galGroundY - glh, 5, glh);
     ctx.beginPath(); ctx.arc(glx, galGroundY - glh - 3, 3, 0, 6.283); ctx.fill();
   }
-  // Right gallery
-  for (var gra = 0; gra < 12; gra++) {
-    var grx = W - gra * 13 - 8;
-    if (grx <= farR + 4) break;
-    var grh = 9 + ((gra * 13) % 5);
-    var grw = 5 + ((gra * 9)  % 3);
-    ctx.fillStyle = 'rgba(8,18,8,0.6)';
-    ctx.fillRect(grx - grw / 2, galGroundY - grh, grw, grh);
+  // Right gallery — between farR and canvas right edge
+  for (var gra = 0; gra < 8; gra++) {
+    var grx = W - gra * 11 - 8;
+    if (grx <= farR + 2) break;
+    var grh = 8 + ((gra * 13) % 5);
+    ctx.fillStyle = 'rgba(20,44,20,0.85)';
+    ctx.fillRect(grx - 2, galGroundY - grh, 5, grh);
     ctx.beginPath(); ctx.arc(grx, galGroundY - grh - 3, 3, 0, 6.283); ctx.fill();
   }
 
@@ -2584,14 +2601,27 @@ function drawCloud(ctx, x, y, w, h) {
 }
 
 function generateBattleTrees() {
+  // Perspective constants (match drawBattleCanvas)
+  var _fL = function(y) { var t = (y-96)/80; t=t<0?0:t>1?1:t; return 92+(6-92)*t; };
+  var _fR = function(y) { var t = (y-96)/80; t=t<0?0:t>1?1:t; return 298+(384-298)*t; };
+
+  // Background horizon trees — small, span full width
   _battleTrees = [];
-  for (var i = 0; i < 10; i++) {
-    _battleTrees.push({
-      x: 20 + i * 36 + rnd(-6, 6),
-      y: 92,
-      h: rnd(12, 20),
-      dark: i % 2 === 0
-    });
+  for (var i = 0; i < 14; i++) {
+    _battleTrees.push({ x: 8 + i*28 + rnd(-4,4), y: 92, h: rnd(18,26), dark: i%2===0 });
+  }
+
+  // Side wall trees — perspective-scaled, y from far(small) to near(large)
+  // Tree center is placed just outside the fairway edge so fairway draws over the overlap
+  var sideYs = [99, 108, 119, 133, 149, 167];
+  _leftTrees = []; _rightTrees = [];
+  for (var si = 0; si < sideYs.length; si++) {
+    var ty = sideYs[si];
+    var h  = Math.floor(24 + (ty-96)/80 * 78);
+    var hw = Math.floor(h * 0.48);
+    var dk = (si % 2 === 0);
+    _leftTrees.push({  x: Math.floor(_fL(ty) - h*0.22), groundY: ty, h: h, hw: hw, dark: dk });
+    _rightTrees.push({ x: Math.floor(_fR(ty) + h*0.22), groundY: ty, h: h, hw: hw, dark: dk });
   }
 }
 
