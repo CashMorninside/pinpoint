@@ -3080,61 +3080,64 @@ function drawGolferBack(ctx, x, y, frame, color) {
 }
 
 var GOLFER_SPRITE_FRAMES = (function() {
-  var H = [
-    '....cccccccc....','...cccccccccc...',
-    '...hhhhhhhhhh...','..hhhhhhhhhhhh..','..hhhhhhhhhhhh..','...hhhhhhhhhh...',
-    '.....nnnnnn.....','...tttttttttt...','..tttttttttttt..',
+  // Side-view, golfer faces RIGHT (toward flag). Backswing = arms go LEFT, follow-through = RIGHT.
+  var H = [  // head rows 0-7
+    '........cccccc..', '.......ccccccc..',  // cap
+    '.......hhhhhhh..', '......hhhhhhhh..', '......hhhhhhhh..', '.......hhhhhh...',  // head
+    '........nnnn....', '.......tttttt...',  // neck + shoulder
   ];
-  var L = [
-    '...pppppppppp...','...pppppppppp...',
-    '..kpppp..ppppk..','..kppp....pppk..','..kppp....pppk..','..kppp....pppk..',
-    '..kppp....pppk..','..kppp....pppk..','..ksss....sssk..',
-    '.sssss....sssss.','.sssss....sssss.','..ssss....ssss..','................',
+  var L = [  // leg rows 18-31
+    '.....pppppppp...',  // 18 hips
+    '....kppp..pppk..', '....kppp..ppk...', '....kppp..ppk...',  // upper legs
+    '....kpp....pk...', '....kpp....pk...', '....kpp....pk...',  // lower legs
+    '....kss....ssk..',  // ankles
+    '...sssss..ssss..', '...sssss..ssss..', '....ssss..ssss..',  // feet
+    '................', '................', '................',
   ];
   var A = [
-    [ // F0 address
-      '..attttdtttdtta.','..attttdtttdtta.','..attttdtttdtta.',
-      '..attttdtttdtta.','..attttdtttdtta.',
-      '..gttttttttttg..','...jeeeeweeeej..','...pppppppppp...','...pppppppppp...','...pppppppppp...',
+    [ // F0: Address — shaft straight down, club head at ground
+      '......tttttt....', '.....atttttt....', '.....atttttt....', '.....atttttt....',
+      '.....agtttttt...', '......jgttttt...', '......lttttttt..', '.....eeeewt.....',
+      '......lpppppp...', '.......fppppp...',
     ],
-    [ // F1 takeaway
-      '.aattttdtttdttt.','aa.tttdtttdtttt.','la..ttdtttdtttt.',
-      '.l.atttdtttdtttg','...atttdtttdtttg',
-      '...gttdttttdttg.','...jeeeeweeeej..','...pppppppppp...','...pppppppppp...','...pppppppppp...',
+    [ // F1: Takeaway — club head swinging back-low left
+      '......tttttt....', '.....atttttt....', '....aattttttt...', '....aattttttt...',
+      '....agttttttt...', '....jgttttttt...', '...ljttttttttt..', '..fleeeewttt....',
+      '.....pppppppp...', '.....ppppppp....',
     ],
-    [ // F2 backswing
-      'fla.tttdtttdtttt','.la.tttdtttdtttt','.la.tttdtttdtttt',
-      '..a.tttdtttdtttt','...attttttttttga',
-      '...gttttttttttg.','...jeeeeweeeej..','...pppppppppp...','...pppppppppp...','...pppppppppp...',
+    [ // F2: Backswing — arms raised, club at hip height left
+      '....laatttttt...', '...ljaatttttt...', '...ljaattttttt..', '...jgattttttt...',
+      '....gttttttttt..', '.....ttttttttt..', '......tttttttt..', '.....eeeewttt...',
+      '......pppppp....', '.....ppppppp....',
     ],
-    [ // F3 top
-      'fjlaaatttdtttttt','.flaaatttdtttttt','...aa.ttdttttttt',
-      '....a.ttdttttttt','....g.ttdtttttga',
-      '.....jttdtttttg.','.....jeeeeweee..','....pppppppppp..','...ppppppppppp..','...ppppppppppp..',
+    [ // F3: Top — arms high left, club behind head
+      '.fjlaaattttttt..', '..flaaattttttt..', '...flaattttttt..', '....lattttttt...',
+      '....jattttttt...', '.....gtttttttt..', '......tttttttt..', '.....eeeewttt...',
+      '......pppppp....', '.....ppppppp....',
     ],
-    [ // F4 transition
-      '..alla.dtttdtttt','..alla.dtttdtttt','..alla.dtttdtttt',
-      '...lla.dtttdtttg','....la.dtttdtttg',
-      '.....jgdtttdttg.','.....leeeeweeeg.','.....lppppppppp.','....lppppppppp..','...pppppppppp...',
+    [ // F4: Transition — arms dropping fast
+      '....laatttttt...', '....laatttttt...', '....jgattttttt..', '.....jgttttttt..',
+      '......gttttttt..', '......jttttttt..', '......lttttttt..', '.....eeeewttt...',
+      '......lpppppp...', '.......fppppp...',
     ],
-    [ // F5 impact
-      '..tttdtttdtttaa.','..tttdtttdtttaa.','..tttdtttdtttaa.',
-      '..tttdtttdtttga.','..tttdtttdttjl..',
-      '..tttdtttdttlf..','...eeeeweeeej...','...pppppppppp...','...pppppppppp...','...pppppppppp...',
+    [ // F5: Impact — arms through right, club at ball
+      '......ttttttaa..', '......tttttaag..', '......tttttjg...', '......ttttttg...',
+      '......ttttttj...', '......tttttttl..', '.....eeeewttlf..', '......pppppppp..',
+      '......ppppppp...', '.....ppppppp....',
     ],
-    [ // F6 finish
-      '..tttdtttdttfla.','..tttdtttdttlja.','..tttdtttdttlja.',
-      '..tttdtttdttlga.','..tttdtttdttjg..',
-      '..tttdtttdttja..','...eeeeweeeej...','...pppppppppp...','...pppppppppp...','...pppppppppp...',
+    [ // F6: Finish — arms wrapped high right, club over left shoulder
+      '......tttttttlf.', '......ttttttla..', '......ttttttla..', '......tttttlag..',
+      '......ttttttja..', '.......ttttjag..', '.......ttttgtt..', '.....eeeewttt...',
+      '......pppppp....', '.....ppppppp....',
     ],
   ];
   var frames = [];
   for (var fi = 0; fi < 7; fi++) {
     var frame = [];
     var ri;
-    for (ri = 0; ri < 9; ri++) frame.push(H[ri]);
+    for (ri = 0; ri < 8; ri++) frame.push(H[ri]);
     for (ri = 0; ri < 10; ri++) frame.push(A[fi][ri]);
-    for (ri = 0; ri < 13; ri++) frame.push(L[ri]);
+    for (ri = 0; ri < 14; ri++) frame.push(L[ri]);
     frames.push(frame);
   }
   return frames;
@@ -3152,7 +3155,7 @@ function drawGolferPixel(ctx, cx, cy, frame, teamColor, scale) {
     'l': '#c0c0c0', 'j': '#2a1800', 'f': '#888888'
   };
   var rows = GOLFER_SPRITE_FRAMES[Math.max(0, Math.min(frame, 6))];
-  var ox = Math.floor(cx) - 8 * scale;
+  var ox = Math.floor(cx) - 7 * scale;   // shift left 1px so body center aligns to cx
   var oy = Math.floor(cy) - 32 * scale;
   for (var r = 0; r < rows.length; r++) {
     var row = rows[r];
@@ -3170,7 +3173,7 @@ function drawGolferPixel(ctx, cx, cy, frame, teamColor, scale) {
     ctx.globalAlpha = _impactFlash;
     ctx.fillStyle = '#ffffff';
     ctx.beginPath();
-    ctx.arc(ox + 13 * scale, oy + 14 * scale, 5 * scale, 0, 6.283);
+    ctx.arc(ox + 12 * scale, oy + 14 * scale, 4 * scale, 0, 6.283);
     ctx.fill();
     ctx.restore();
   }
