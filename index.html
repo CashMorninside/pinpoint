@@ -1808,7 +1808,7 @@ function showLocation(locId) {
   var lStr = (rivData && rivData.losses) ? rivData.losses : 0;
   if (rivRecEl) rivRecEl.textContent = 'W ' + wStr + ' / L ' + lStr;
 
-  if (frankieEl) frankieEl.textContent = '"' + getFrankieLine() + '"';
+  if (frankieEl) frankieEl.textContent = '"' + rival.frankieGossip[0] + '"';
   if (weatherEl) weatherEl.textContent = _currentWeather.name;
   if (greensEl) greensEl.textContent = _currentCondition.name;
 
