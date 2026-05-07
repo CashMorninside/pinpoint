@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Golfer Sprite Demo</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #0d1f0e; color: #e8f5e9; font-family: monospace; padding: 12px; }
+    h2 { color: #50c878; font-size: 13px; margin-bottom: 12px; text-align: center; }
+    .row { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 16px; }
+    .card { text-align: center; }
+    .card p { font-size: 9px; color: #50c878; margin-top: 4px; }
+    canvas { image-rendering: pixelated; display: block; border: 1px solid #243825; }
+    .section { margin-bottom: 20px; }
+    .section h3 { color: #f5c518; font-size: 11px; margin-bottom: 8px; text-align: center; }
+    #animWrap { text-align: center; }
+    #animWrap canvas { margin: 0 auto; border: 2px solid #50c878; }
+    .btn { background: #50c878; color: #0d1f0e; border: none; padding: 6px 14px;
+           font-family: monospace; font-size: 11px; cursor: pointer; margin: 6px 4px; }
+    .colors { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 10px; }
+    .swatch { width: 24px; height: 24px; cursor: pointer; border: 2px solid transparent; }
+    .swatch.active { border-color: #fff; }
+  </style>
+</head>
+<body>
+
+<h2>GOLFER SPRITE DEMO — 16×32 px, Scale×8</h2>
+<p style="text-align:center;font-size:10px;color:#888;margin-bottom:10px">Reference: trail-side view, golfer faces right. Both legs visible, hip hinge, clear swing arc.</p>
+
+<div class="colors" id="swatchRow"></div>
+
+<div class="section">
+  <h3>ALL 7 FRAMES (green = player, blue = rival)</h3>
+  <div class="row" id="frameRow"></div>
+</div>
+
+<div class="section">
+  <h3>ANIMATED PREVIEW (scale ×10)</h3>
+  <div id="animWrap">
+    <canvas id="anim" width="160" height="320"></canvas>
+    <br>
+    <button class="btn" id="btnPlay">PAUSE</button>
+    <button class="btn" id="btnSlower">SLOWER</button>
+    <button class="btn" id="btnFaster">FASTER</button>
+  </div>
+</div>
+
+<script>
+// ── PALETTE ──
+// 'c' = team color, 'd' = dark team, 't' = shirt, 'a' = arm (all team-colored)
+// 'h'/'n' = skin, 'g' = glove, 'e' = belt, 'w' = buckle
+// 'p' = pants, 'k' = pants dark, 's' = shoe
+// 'l' = shaft, 'j' = grip, 'f' = club head
+
+function makePalette(tc) {
+  var td = darken(tc, 40);
+  return {
+    'c': tc, 'd': td, 't': tc, 'a': tc,
+    'h': '#d4a574', 'n': '#c8956a',
+    'g': '#f0f0ee',
+    'e': '#3a2800', 'w': '#c8a840',
+    'p': '#7a9ab0', 'k': '#4a6a80',
+    's': '#1a1212',
+    'l': '#c8c8c8', 'j': '#2a1800', 'f': '#888888'
+  };
+}
+
+function darken(hex, amt) {
+  var n = parseInt(hex.slice(1), 16);
+  var r = Math.max(0, (n>>16) - amt);
+  var g = Math.max(0, ((n>>8)&255) - amt);
+  var b = Math.max(0, (n&255) - amt);
+  return '#' + ((r<<16)|(g<<8)|b).toString(16).padStart(6,'0');
+}
+
+// ── SPRITE FRAMES ──
+// 16 cols × 32 rows. Row 0 = top (cap), row 31 = bottom (feet).
+// Golfer faces RIGHT. View from trail side. Both legs visible.
+// Swing arc: address → takeaway (club back-left) → backswing → top → transition → impact → finish
+var FRAMES = (function() {
+  var H = [  // rows 0-7: head/cap/neck
+    '.........ddddd..',  // 0  cap brim, points right
+    '........cccccd..',  // 1  cap
+    '.......cccccc...',  // 2  cap crown
+    '.......hhhhhh...',  // 3  head
+    '......hhhhhhhh..',  // 4  head widest
+    '.......hhhhhh...',  // 5  head lower
+    '........nnnn....',  // 6  neck
+    '........ttttt...',  // 7  shoulders (5px = both visible, slight lean)
+  ];
+  var L = [  // rows 18-31: legs/feet — shoulder-width stance, both legs
+    '.........ppp....',  // 18 hips
+    '........ppppp...',  // 19 thighs
+    '........ppppp...',  // 20
+    '.......kpp.ppk..',  // 21 legs split: trail (L) + lead (R)
+    '.......kpp.ppk..',  // 22
+    '.......kpp.ppk..',  // 23
+    '.......kpp.ppk..',  // 24
+    '.......kpp.ppk..',  // 25
+    '.......kpp.ppk..',  // 26
+    '.......kss.ssk..',  // 27 ankles
+    '......sssss.ssss',  // 28 feet: trail foot left, lead foot right
+    '......sssss.ssss',  // 29
+    '.......ssss.sss.',  // 30
+    '................',  // 31
+  ];
+  var A = [
+    [ // F0: ADDRESS — arms down in front, shaft angled toward ball (right)
+      '........ttttt...',  // 8
+      '........ttttta..',  // 9  arm
+      '.........ttaag..',  // 10 arm + glove
+      '.........ttajg..',  // 11 grip
+      '.........ttjll..',  // 12 shaft going right-down
+      '........eewlll..',  // 13 belt + shaft
+      '.........pplll..',  // 14 shaft to ball
+      '.........pplll..',  // 15
+      '.........pppll..',  // 16
+      '.........pppff..',  // 17 club head near ball
+    ],
+    [ // F1: TAKEAWAY — club head swings back and low (left)
+      '........ttttt...',  // 8
+      '........ttttta..',  // 9
+      '.........ttaag..',  // 10
+      '..fl....ttajg...',  // 11 club head back-left + arm
+      '...ll...ttjg....',  // 12 shaft
+      '....llltttg.....',  // 13 shaft reaching torso
+      '........eeewp...',  // 14 belt
+      '.........ppppp..',  // 15
+      '.........pppp...',  // 16
+      '.........pppp...',  // 17
+    ],
+    [ // F2: BACKSWING — arms elevated left, club at hip height
+      '..fl....ttttt...',  // 8  club head left
+      '...ll...ttttt...',  // 9  shaft
+      '....ll..tttaa...',  // 10 shaft + arm
+      '......jlttag....',  // 11 grip + arm
+      '.......atttg....',  // 12 arm + glove
+      '........ttag....',  // 13 arm
+      '........eeew....',  // 14 belt
+      '.........pppp...',  // 15
+      '.........pppp...',  // 16
+      '.........pppp...',  // 17
+    ],
+    [ // F3: TOP — club behind/above head high-left
+      '.fl.....ttttt...',  // 8  club head top-left
+      '..ll....ttttt...',  // 9  shaft
+      '...ll...tttaa...',  // 10 shaft
+      '....ljtttaag....',  // 11 shaft→grip
+      '.....gttttttt...',  // 12 glove + torso
+      '.........tttt...',  // 13 torso only
+      '........eeew....',  // 14 belt
+      '.........pppp...',  // 15
+      '.........pppp...',  // 16
+      '.........pppp...',  // 17
+    ],
+    [ // F4: TRANSITION — rapid drop, arms falling
+      '..ll....ttttt...',  // 8  shaft still high
+      '...ll...ttttt...',  // 9
+      '....ltttttaa....',  // 10 shaft + arm dropping
+      '.....jttttag....',  // 11 grip coming through
+      '......gttttj....',  // 12 glove
+      '.......tttjll...',  // 13 shaft dropping right
+      '........eewll...',  // 14 belt + shaft
+      '.........ppll...',  // 15
+      '.........pppl...',  // 16
+      '.........pppff..',  // 17 club head down
+    ],
+    [ // F5: IMPACT — arms driving through, shaft forward-right
+      '........tttaaa..',  // 8  arms extended right
+      '........tttaag..',  // 9  glove
+      '.........ttajg..',  // 10 grip
+      '.........ttjlll.',  // 11 shaft going right
+      '.........tttlll.',  // 12 shaft
+      '........eewttlf.',  // 13 belt + club head right
+      '.........ppppp..',  // 14
+      '.........pppp...',  // 15
+      '.........pppp...',  // 16
+      '.........pppp...',  // 17
+    ],
+    [ // F6: FINISH — arms wrapped high right over shoulder
+      '........tttttlf.',  // 8  club head high-right
+      '........tttttla.',  // 9  shaft
+      '........ttttlaa.',  // 10 arm
+      '........tttlaag.',  // 11 arm + glove
+      '........ttlajg..',  // 12 grip
+      '........tttjg...',  // 13
+      '........eeew....',  // 14 belt
+      '.........pppp...',  // 15
+      '.........pppp...',  // 16
+      '.........pppp...',  // 17
+    ],
+  ];
+
+  var frames = [];
+  for (var fi = 0; fi < 7; fi++) {
+    var frame = [];
+    var ri;
+    for (ri = 0; ri < 8; ri++) frame.push(H[ri]);
+    for (ri = 0; ri < 10; ri++) frame.push(A[fi][ri]);
+    for (ri = 0; ri < 14; ri++) frame.push(L[ri]);
+    frames.push(frame);
+  }
+  return frames;
+})();
+
+var FRAME_NAMES = ['Address','Takeaway','Backswing','Top','Transition','Impact','Finish'];
+
+function drawSprite(ctx, cx, cy, frameIdx, tc, scale) {
+  var P = makePalette(tc);
+  var rows = FRAMES[Math.max(0, Math.min(frameIdx, 6))];
+  var ox = cx - 8 * scale;
+  var oy = cy - 32 * scale;
+  for (var r = 0; r < rows.length; r++) {
+    var row = rows[r];
+    for (var c = 0; c < 16; c++) {
+      var ch = row[c];
+      if (ch === '.') continue;
+      var col = P[ch];
+      if (!col) continue;
+      ctx.fillStyle = col;
+      ctx.fillRect(ox + c * scale, oy + r * scale, scale, scale);
+    }
+  }
+}
+
+// ── BUILD FRAME CARDS ──
+var COLORS = ['#50c878','#4488cc','#d63a3a','#f5c518','#cc7a00','#aa44cc'];
+var activeColor = COLORS[0];
+
+var swatchRow = document.getElementById('swatchRow');
+COLORS.forEach(function(col, i) {
+  var s = document.createElement('div');
+  s.className = 'swatch' + (i === 0 ? ' active' : '');
+  s.style.background = col;
+  s.addEventListener('click', function() {
+    activeColor = col;
+    document.querySelectorAll('.swatch').forEach(function(el) { el.classList.remove('active'); });
+    s.classList.add('active');
+    renderAllFrames();
+    renderAnim();
+  });
+  swatchRow.appendChild(s);
+});
+
+function renderAllFrames() {
+  var row = document.getElementById('frameRow');
+  row.innerHTML = '';
+  var SCALE = 8;
+  var W = 16 * SCALE, H = 32 * SCALE;
+  FRAMES.forEach(function(_, fi) {
+    var card = document.createElement('div');
+    card.className = 'card';
+    var cvs = document.createElement('canvas');
+    cvs.width = W; cvs.height = H;
+    var ctx = cvs.getContext('2d');
+    ctx.fillStyle = '#1a3a1a';
+    ctx.fillRect(0, 0, W, H);
+    drawSprite(ctx, W/2, H, fi, activeColor, SCALE);
+    var lbl = document.createElement('p');
+    lbl.textContent = fi + ': ' + FRAME_NAMES[fi];
+    card.appendChild(cvs);
+    card.appendChild(lbl);
+    row.appendChild(card);
+  });
+}
+
+// ── ANIMATION ──
+var animFrame = 0;
+var animPlaying = true;
+var animInterval = 200;
+var animTimer = null;
+
+function renderAnim() {
+  var cvs = document.getElementById('anim');
+  var ctx = cvs.getContext('2d');
+  ctx.fillStyle = '#1a3a1a';
+  ctx.fillRect(0, 0, cvs.width, cvs.height);
+  // Ground line
+  ctx.fillStyle = '#2d5a2d';
+  ctx.fillRect(0, cvs.height - 40, cvs.width, 4);
+  var SCALE = 10;
+  drawSprite(ctx, cvs.width/2, cvs.height - 40, animFrame, activeColor, SCALE);
+  // Frame label
+  ctx.fillStyle = '#50c878';
+  ctx.font = '10px monospace';
+  ctx.fillText(FRAME_NAMES[animFrame], 8, 16);
+}
+
+function startAnim() {
+  if (animTimer) clearInterval(animTimer);
+  animTimer = setInterval(function() {
+    if (!animPlaying) return;
+    animFrame = (animFrame + 1) % 7;
+    renderAnim();
+  }, animInterval);
+}
+
+document.getElementById('btnPlay').addEventListener('click', function() {
+  animPlaying = !animPlaying;
+  this.textContent = animPlaying ? 'PAUSE' : 'PLAY';
+});
+document.getElementById('btnSlower').addEventListener('click', function() {
+  animInterval = Math.min(600, animInterval + 80);
+  startAnim();
+});
+document.getElementById('btnFaster').addEventListener('click', function() {
+  animInterval = Math.max(80, animInterval - 60);
+  startAnim();
+});
+
+renderAllFrames();
+renderAnim();
+startAnim();
+</script>
+</body>
+</html>
