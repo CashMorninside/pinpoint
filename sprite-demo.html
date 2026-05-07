@@ -55,13 +55,14 @@
 function makePalette(tc) {
   var td = darken(tc, 40);
   return {
+    'o': '#1a1010',
     'c': tc, 'd': td, 't': tc, 'a': tc,
-    'h': '#d4a574', 'n': '#c8956a',
+    'h': '#e8b888', 'n': '#c8845a',
     'g': '#f0f0ee',
     'e': '#3a2800', 'w': '#c8a840',
-    'p': '#7a9ab0', 'k': '#4a6a80',
+    'p': '#3060a8', 'k': '#1a3870',
     's': '#1a1212',
-    'l': '#c8c8c8', 'j': '#2a1800', 'f': '#888888'
+    'l': '#c8c8c8', 'j': '#2a1800', 'f': '#787878'
   };
 }
 
@@ -73,121 +74,119 @@ function darken(hex, amt) {
   return '#' + ((r<<16)|(g<<8)|b).toString(16).padStart(6,'0');
 }
 
-// ── SPRITE FRAMES ──
-// 16 cols × 32 rows. Row 0 = top (cap), row 31 = bottom (feet).
-// Golfer faces RIGHT. View from trail side. Both legs visible.
-// Swing arc: address → takeaway (club back-left) → backswing → top → transition → impact → finish
+// ── SPRITE FRAMES ── Mario Golf-inspired: chunky, dark outlines ('o'), prominent club
+// 16x32 grid. Row 0 = top (cap), row 31 = bottom (feet). Golfer faces RIGHT.
 var FRAMES = (function() {
-  var H = [  // rows 0-7: head/cap/neck
-    '.........ddddd..',  // 0  cap brim, points right
-    '........cccccd..',  // 1  cap
-    '.......cccccc...',  // 2  cap crown
-    '.......hhhhhh...',  // 3  head
-    '......hhhhhhhh..',  // 4  head widest
-    '.......hhhhhh...',  // 5  head lower
-    '........nnnn....',  // 6  neck
-    '........ttttt...',  // 7  shoulders (5px = both visible, slight lean)
+  var H = [  // rows 0-7: head/cap
+    '.......ooooooo..',  // 0: cap top outline
+    '......occccoo...',  // 1: cap body
+    '......occccdoo..',  // 2: cap + dark visor tip
+    '.....ohhhhhhhoo.',  // 3: forehead with outline
+    '....ohhhhhhhhoo.',  // 4: face widest
+    '....ohhnnnhhhoo.',  // 5: lower face (n=shadow)
+    '.......onno.....',  // 6: neck
+    '.....ottttttoo..',  // 7: shoulders
   ];
-  var L = [  // rows 18-31: legs/feet — shoulder-width stance, both legs
-    '.........ppp....',  // 18 hips
-    '........ppppp...',  // 19 thighs
-    '........ppppp...',  // 20
-    '.......kpp.ppk..',  // 21 legs split: trail (L) + lead (R)
-    '.......kpp.ppk..',  // 22
-    '.......kpp.ppk..',  // 23
-    '.......kpp.ppk..',  // 24
-    '.......kpp.ppk..',  // 25
-    '.......kpp.ppk..',  // 26
-    '.......kss.ssk..',  // 27 ankles
-    '......sssss.ssss',  // 28 feet: trail foot left, lead foot right
-    '......sssss.ssss',  // 29
-    '.......ssss.sss.',  // 30
+  var L = [  // rows 18-31: legs/feet
+    '.....oppppppoo..',  // 18: hips
+    '....okpppppkoo..',  // 19: upper thighs
+    '....okpp.ppko...',  // 20: legs split
+    '....okpp.ppko...',  // 21
+    '....okpp.ppko...',  // 22
+    '....okpp.ppko...',  // 23
+    '....okpp.ppko...',  // 24
+    '....okss.ssko...',  // 25: ankles
+    '...oossss.ssoo..',  // 26: feet
+    '...oossss.ssoo..',  // 27
+    '....ossss.ssoo..',  // 28
+    '................',  // 29
+    '................',  // 30
     '................',  // 31
   ];
   var A = [
-    [ // F0: ADDRESS — arms down in front, shaft angled toward ball (right)
-      '........ttttt...',  // 8
-      '........ttttta..',  // 9  arm
-      '.........ttaag..',  // 10 arm + glove
-      '.........ttajg..',  // 11 grip
-      '.........ttjll..',  // 12 shaft going right-down
-      '........eewlll..',  // 13 belt + shaft
-      '.........pplll..',  // 14 shaft to ball
-      '.........pplll..',  // 15
-      '.........pppll..',  // 16
-      '.........pppff..',  // 17 club head near ball
+    [ // F0: ADDRESS -- arms hang down, club grounded at ball (right)
+      '.....ottttttoo..',  // 8
+      '.....ottttttoo..',  // 9
+      '.....ottttttoo..',  // 10
+      '.....ottttaaoo..',  // 11: arm extending down
+      '....otttttajoo..',  // 12: arm + grip (j)
+      '....oeeeewtjloo.',  // 13: belt + grip + shaft (l)
+      '.....opppppllfo.',  // 14: pants + shaft + club head (f)
+      '.....oppppppoo..',  // 15
+      '.....ppppppoo...',  // 16
+      '................',  // 17
     ],
-    [ // F1: TAKEAWAY — club head swings back and low (left)
-      '........ttttt...',  // 8
-      '........ttttta..',  // 9
-      '.........ttaag..',  // 10
-      '..fl....ttajg...',  // 11 club head back-left + arm
-      '...ll...ttjg....',  // 12 shaft
-      '....llltttg.....',  // 13 shaft reaching torso
-      '........eeewp...',  // 14 belt
-      '.........ppppp..',  // 15
-      '.........pppp...',  // 16
-      '.........pppp...',  // 17
+    [ // F1: TAKEAWAY -- club sweeping back-left, low
+      '..fllottttttoo..',  // 8
+      '..jllottttttoo..',  // 9
+      '...llottttttoo..',  // 10
+      '....lotttttaoo..',  // 11
+      '....otttttajoo..',  // 12
+      '....oeeeewtjooo.',  // 13
+      '.....oppppppoo..',  // 14
+      '.....oppppppoo..',  // 15
+      '.....ppppppoo...',  // 16
+      '................',  // 17
     ],
-    [ // F2: BACKSWING — arms elevated left, club at hip height
-      '..fl....ttttt...',  // 8  club head left
-      '...ll...ttttt...',  // 9  shaft
-      '....ll..tttaa...',  // 10 shaft + arm
-      '......jlttag....',  // 11 grip + arm
-      '.......atttg....',  // 12 arm + glove
-      '........ttag....',  // 13 arm
-      '........eeew....',  // 14 belt
-      '.........pppp...',  // 15
-      '.........pppp...',  // 16
-      '.........pppp...',  // 17
+    [ // F2: BACKSWING -- arms hip-high, club mid-left
+      '.fllottttttoo...',  // 8
+      '..ljottttttoo...',  // 9
+      '..jaottttttoo...',  // 10
+      '...aottttttoo...',  // 11
+      '....ottttttoo...',  // 12
+      '....oeeeewtoo...',  // 13
+      '.....oppppppoo..',  // 14
+      '.....oppppppoo..',  // 15
+      '.....ppppppoo...',  // 16
+      '................',  // 17
     ],
-    [ // F3: TOP — club behind/above head high-left
-      '.fl.....ttttt...',  // 8  club head top-left
-      '..ll....ttttt...',  // 9  shaft
-      '...ll...tttaa...',  // 10 shaft
-      '....ljtttaag....',  // 11 shaft→grip
-      '.....gttttttt...',  // 12 glove + torso
-      '.........tttt...',  // 13 torso only
-      '........eeew....',  // 14 belt
-      '.........pppp...',  // 15
-      '.........pppp...',  // 16
-      '.........pppp...',  // 17
+    [ // F3: TOP -- club + arms high-left, shaft nearly horizontal
+      'oflottttttoo....',  // 8
+      '.lljottttttoo...',  // 9
+      '..jaaottttoo....',  // 10
+      '...aaottttoo....',  // 11
+      '....ottttttoo...',  // 12
+      '....oeeeewtoo...',  // 13
+      '.....oppppppoo..',  // 14
+      '.....oppppppoo..',  // 15
+      '.....ppppppoo...',  // 16
+      '................',  // 17
     ],
-    [ // F4: TRANSITION — rapid drop, arms falling
-      '..ll....ttttt...',  // 8  shaft still high
-      '...ll...ttttt...',  // 9
-      '....ltttttaa....',  // 10 shaft + arm dropping
-      '.....jttttag....',  // 11 grip coming through
-      '......gttttj....',  // 12 glove
-      '.......tttjll...',  // 13 shaft dropping right
-      '........eewll...',  // 14 belt + shaft
-      '.........ppll...',  // 15
-      '.........pppl...',  // 16
-      '.........pppff..',  // 17 club head down
+    [ // F4: TRANSITION -- arms dropping, club center-high
+      '...fllottttoo...',  // 8
+      '....llaottttoo..',  // 9
+      '....laottttoo...',  // 10
+      '....joottttoo...',  // 11
+      '....oottttttoo..',  // 12
+      '....oeeeewtoo...',  // 13
+      '.....oppppppoo..',  // 14
+      '.....oppppppoo..',  // 15
+      '.....ppppppoo...',  // 16
+      '................',  // 17
     ],
-    [ // F5: IMPACT — arms driving through, shaft forward-right
-      '........tttaaa..',  // 8  arms extended right
-      '........tttaag..',  // 9  glove
-      '.........ttajg..',  // 10 grip
-      '.........ttjlll.',  // 11 shaft going right
-      '.........tttlll.',  // 12 shaft
-      '........eewttlf.',  // 13 belt + club head right
-      '.........ppppp..',  // 14
-      '.........pppp...',  // 15
-      '.........pppp...',  // 16
-      '.........pppp...',  // 17
+    [ // F5: IMPACT -- arms driving through, club at ball (right)
+      '.....ottttttaao.',  // 8
+      '.....ottttttaajo',  // 9
+      '.....otttttttjoo',  // 10
+      '.....ottttttjloo',  // 11
+      '.....ottttttlloo',  // 12
+      '.....oeeeewttllf',  // 13: belt + club head (f) at ball
+      '.....oppppppoo..',  // 14
+      '.....oppppppoo..',  // 15
+      '.....ppppppoo...',  // 16
+      '................',  // 17
     ],
-    [ // F6: FINISH — arms wrapped high right over shoulder
-      '........tttttlf.',  // 8  club head high-right
-      '........tttttla.',  // 9  shaft
-      '........ttttlaa.',  // 10 arm
-      '........tttlaag.',  // 11 arm + glove
-      '........ttlajg..',  // 12 grip
-      '........tttjg...',  // 13
-      '........eeew....',  // 14 belt
-      '.........pppp...',  // 15
-      '.........pppp...',  // 16
-      '.........pppp...',  // 17
+    [ // F6: FINISH -- arms wrapped high-right, club over shoulder
+      '.....ottttttlfo.',  // 8
+      '.....ottttttalo.',  // 9
+      '.....ottttttalo.',  // 10
+      '.....otttttaaoo.',  // 11
+      '....ottttttajoo.',  // 12
+      '....oeeeewtaooo.',  // 13
+      '.....oppppppoo..',  // 14
+      '.....oppppppoo..',  // 15
+      '.....ppppppoo...',  // 16
+      '................',  // 17
     ],
   ];
 
@@ -208,7 +207,7 @@ var FRAME_NAMES = ['Address','Takeaway','Backswing','Top','Transition','Impact',
 function drawSprite(ctx, cx, cy, frameIdx, tc, scale) {
   var P = makePalette(tc);
   var rows = FRAMES[Math.max(0, Math.min(frameIdx, 6))];
-  var ox = cx - 8 * scale;
+  var ox = cx - 7 * scale;
   var oy = cy - 32 * scale;
   for (var r = 0; r < rows.length; r++) {
     var row = rows[r];
