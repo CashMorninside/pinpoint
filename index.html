@@ -813,7 +813,7 @@ var RIVALS_DATA = {
   ricky: {
     id: 'ricky', name: 'Ricky the Rocket', icon: '🧔🏽‍♂️',
     style: 'Bomber', hometown: 'Hicksville, Long Island',
-    skill: 50, tier: 2, circuit: 'muni',
+    skill: 50, tier: 2, circuit: 'county',
     color: '#cc3344',
     bio: 'Ricky Vasquez has the longest average drive on the Long Island amateur circuit. He has had this distinction for four years running and brings it up constantly. His short game is a separate conversation.',
     intro: [
@@ -1017,7 +1017,7 @@ var RIVALS_DATA = {
 var LOCATIONS = {
   meadowbrook: {
     id: 'meadowbrook', name: 'Meadowbrook Muni', circuit: 'muni',
-    rivalId: 'donnie', prize: 200, minLevel: 1,
+    rivalId: 'donnie', prize: 200, minLevel: 1, tier: 'muni',
     totalHoles: 3, toWin: 2,
     parValues: [4,3,5], holeYards: [380,145,520],
     description: 'A classic municipal track with wide fairways.',
@@ -1032,11 +1032,11 @@ var LOCATIONS = {
     pinF: {x:210/390, y:228/420}
   },
   munichamp: {
-    id: 'munichamp', name: 'Muni Championship', circuit: 'muni',
-    rivalId: 'ricky', prize: 750, minLevel: 3,
+    id: 'munichamp', name: 'Muni Championship', circuit: 'county',
+    rivalId: 'ricky', prize: 750, minLevel: 1,
     totalHoles: 3, toWin: 2,
     parValues: [5,4,4], holeYards: [550,440,385],
-    description: 'The Muni Circuit finale. Win this to go County.',
+    description: 'Ricky\'s home course. The county circuit starts here.',
     pinF: {x:262/390, y:210/420},
     isTrophy: true
   },
@@ -1100,6 +1100,14 @@ var LOCATIONS = {
     isTrophy: true, isFinal: true
   }
 };
+
+// Tier groups — beat ALL in current tier to unlock the next
+var TIER_GROUPS = {
+  muni:   ['meadowbrook', 'parkview'],
+  county: ['munichamp', 'nassau', 'liclassic', 'groove', 'countychamp'],
+  state:  ['empirestate', 'nystate', 'commissioner']
+};
+var NEXT_TIER = {muni: 'county', county: 'state'};
 
 // ═══════════════════════════════════════════════════════════════
 // DATA — SHOP
@@ -1375,9 +1383,10 @@ function initLocState() {
     if (!locState[lid]) locState[lid] = {beaten:false, unlocked:false};
   }
   // ensure muni is unlocked if fresh
-  if (G.currentTour === 'muni') {
-    if (!locState['meadowbrook'].unlocked) locState['meadowbrook'].unlocked = true;
-    if (!locState['parkview'].unlocked) locState['parkview'].unlocked = true;
+  // Ensure all locations in the current tier are unlocked
+  var tierLocs = TIER_GROUPS[G.currentTour] || [];
+  for (var ti = 0; ti < tierLocs.length; ti++) {
+    if (locState[tierLocs[ti]]) locState[tierLocs[ti]].unlocked = true;
   }
 }
 
@@ -1814,13 +1823,8 @@ function showLocation(locId) {
 
   var enterBtn = safeGet('btn-enter');
   if (enterBtn) {
-    if (G.level < loc.minLevel) {
-      enterBtn.textContent = 'NEED LVL ' + loc.minLevel;
-      enterBtn.disabled = true;
-    } else {
-      enterBtn.textContent = 'ENTER TOURNAMENT';
-      enterBtn.disabled = false;
-    }
+    enterBtn.textContent = 'ENTER TOURNAMENT';
+    enterBtn.disabled = false;
   }
 
   showScreen('screen-location');
@@ -3688,6 +3692,13 @@ function playerShotResult(quality, shapeId) {
   B.holeYardsLeft = Math.max(0, B.holeYardsLeft - dist);
   B.holeStrokes++;
 
+  // Hole-in-one only valid: par 3, first stroke, PERFECT quality
+  if (B.holeYardsLeft === 0 && B.holeStrokes === 1) {
+    if (B.holePar !== 3 || quality !== 'PERFECT') {
+      B.holeYardsLeft = rnd(1, 4);
+    }
+  }
+
   // Determine new lie
   if (B.holeYardsLeft <= 0) {
     B.lie = 'fairway';
@@ -4115,45 +4126,47 @@ function afterMatchFlow(playerWon, rivalId) {
 }
 
 function unlockNextCourse(locId) {
-  // Muni openers: munichamp only unlocks when BOTH meadowbrook AND parkview are beaten
-  if (locId === 'meadowbrook' || locId === 'parkview') {
-    var mDone = locState['meadowbrook'] && locState['meadowbrook'].beaten;
-    var pDone = locState['parkview']    && locState['parkview'].beaten;
-    if (mDone && pDone && locState['munichamp']) {
-      locState['munichamp'].unlocked = true;
+  var currentTier = G.currentTour;
+  var tierLocs = TIER_GROUPS[currentTier] || [];
+
+  // Check if every location in the current tier is now beaten
+  var allBeaten = true;
+  for (var i = 0; i < tierLocs.length; i++) {
+    if (!locState[tierLocs[i]] || !locState[tierLocs[i]].beaten) {
+      allBeaten = false;
+      break;
     }
-    return;
   }
 
-  var unlockMap = {
-    'munichamp':   'nassau',
-    'nassau':      'liclassic',
-    'liclassic':   'groove',
-    'groove':      'countychamp',
-    'countychamp': 'empirestate',
-    'empirestate': 'nystate',
-    'nystate':     'commissioner'
-  };
-  var next = unlockMap[locId];
-  if (next && locState[next]) locState[next].unlocked = true;
-
-  // Tour progression
-  if (locId === 'munichamp') G.currentTour = 'county';
-  if (locId === 'countychamp') G.currentTour = 'state';
+  if (allBeaten && NEXT_TIER[currentTier]) {
+    G.currentTour = NEXT_TIER[currentTier];
+    var nextLocs = TIER_GROUPS[G.currentTour] || [];
+    for (var j = 0; j < nextLocs.length; j++) {
+      if (locState[nextLocs[j]]) locState[nextLocs[j]].unlocked = true;
+    }
+  }
 }
 
 function checkBadges() {
-  if (locState['munichamp'] && locState['munichamp'].beaten && G.badges.indexOf('muni') < 0) {
+  // Badges fire when an entire tier is completed
+  var tierDone = function(tier) {
+    var locs = TIER_GROUPS[tier] || [];
+    for (var i = 0; i < locs.length; i++) {
+      if (!locState[locs[i]] || !locState[locs[i]].beaten) return false;
+    }
+    return locs.length > 0;
+  };
+  if (tierDone('muni') && G.badges.indexOf('muni') < 0) {
     G.badges.push('muni');
-    showToast('🟢 MUNI CHAMP badge earned!');
+    showToast('🟢 MUNI CIRCUIT COMPLETE!');
   }
-  if (locState['countychamp'] && locState['countychamp'].beaten && G.badges.indexOf('county') < 0) {
+  if (tierDone('county') && G.badges.indexOf('county') < 0) {
     G.badges.push('county');
-    showToast('🔵 COUNTY CHAMP badge earned!');
+    showToast('🔵 COUNTY CIRCUIT COMPLETE!');
   }
-  if (locState['nystate'] && locState['nystate'].beaten && G.badges.indexOf('state') < 0) {
+  if (tierDone('state') && G.badges.indexOf('state') < 0) {
     G.badges.push('state');
-    showToast('🟡 STATE CHAMP badge earned!');
+    showToast('🟡 STATE CIRCUIT COMPLETE!');
   }
   if (locState['commissioner'] && locState['commissioner'].beaten && G.badges.indexOf('commissioner') < 0) {
     G.badges.push('commissioner');
