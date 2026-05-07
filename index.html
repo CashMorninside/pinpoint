@@ -2599,15 +2599,25 @@ function _lightenColor(hex, amt) {
 }
 
 function drawGolfer(ctx, x, y, frame, facingRight, color) {
-  // Frame data: spine lean (deg), hipShift, trailArmAngle, leadArmAngle, clubAngle, kneeBend
+  // Frame data matched to PGA swing photo sequence (15 frames → 7)
+  // hip: lateral shift of hips toward front foot (+) or back foot (-)
+  //      front foot = +x side (toward target for right-facing golfer)
+  // heel: back heel lift in pixels (0 = planted, 14 = full toe-only finish)
   var frames = [
-    {spine:4,  hip:0,  trail:-8,  lead:-5,  club:8,   knee:4},   // 0 address
-    {spine:6,  hip:1,  trail:-35, lead:-28, club:-20, knee:5},   // 1 takeaway
-    {spine:9,  hip:2,  trail:-75, lead:-60, club:-65, knee:7},   // 2 backswing
-    {spine:11, hip:3,  trail:-100,lead:-85, club:-100,knee:8},   // 3 top
-    {spine:7,  hip:2,  trail:-55, lead:-45, club:-55, knee:6},   // 4 transition
-    {spine:-4, hip:-3, trail:15,  lead:12,  club:35,  knee:2},   // 5 impact
-    {spine:-8, hip:-4, trail:75,  lead:85,  club:95,  knee:0}    // 6 follow-through
+    // 0 address — knees flexed, spine tilted to ball, arms hanging
+    {spine:5,  hip:0,  trail:-8,  lead:-5,  club:6,   knee:5,  heel:0},
+    // 1 takeaway — club to hip height, weight loading on back foot
+    {spine:7,  hip:-2, trail:-38, lead:-30, club:-22, knee:5,  heel:0},
+    // 2 backswing — club above horizontal, full left arm extension
+    {spine:10, hip:-3, trail:-78, lead:-64, club:-72, knee:7,  heel:0},
+    // 3 top — full shoulder turn, max weight on back foot
+    {spine:12, hip:-4, trail:-105,lead:-90, club:-110,knee:8,  heel:0},
+    // 4 transition — hips FIRE toward target before arms come down
+    {spine:8,  hip:3,  trail:-62, lead:-52, club:-58, knee:5,  heel:3},
+    // 5 impact — hip well forward, reverse C spine, back heel up, hands lead
+    {spine:-4, hip:6,  trail:14,  lead:12,  club:32,  knee:2,  heel:8},
+    // 6 finish — full rotation, all weight on front foot, back toe only
+    {spine:-8, hip:10, trail:82,  lead:92,  club:102, knee:0,  heel:14}
   ];
 
   var fd = frames[clamp(frame, 0, 6)];
@@ -2621,50 +2631,54 @@ function drawGolfer(ctx, x, y, frame, facingRight, color) {
   var PI = Math.PI;
   var D2R = PI / 180;
 
-  // Derived angles (all for right-facing; scale(-1,1) mirrors)
-  var spineA   = fd.spine   * D2R;
-  var trailA   = fd.trail   * D2R;
-  var leadA    = fd.lead    * D2R;
-  var clubA    = fd.club    * D2R;
-  var hipShift = fd.hip;
-  var knee     = fd.knee;
+  var spineA = fd.spine * D2R;
+  var trailA = fd.trail * D2R;
+  var leadA  = fd.lead  * D2R;
+  var clubA  = fd.club  * D2R;
+  var knee   = fd.knee;
 
-  // Key joint positions (origin = feet center)
-  var hipY    = -22 + knee * 0.3;
-  var hipX    = hipShift;
+  // Hip shifts laterally toward front foot (+x) during downswing
+  // Feet stay planted; only the hip center moves
+  var hipX = fd.hip;
+  var hipY = -22 + knee * 0.3;
+
+  // Shoulder and neck follow spine angle from hip
   var shouldX = hipX + Math.sin(spineA) * 18;
   var shouldY = hipY - 18;
   var neckX   = hipX + Math.sin(spineA) * 22;
   var neckY   = hipY - 22;
 
-  // Arm origins (shoulders, slightly split lead/trail)
+  // Feet stay planted regardless of hip shift
+  var backFootX  = -10;
+  var frontFootX = 9;
+  var groundY    = 0;
+
+  // Heel-up ankle position for back foot (toe stays on ground)
+  var heelLift   = fd.heel;
+  var ankleY     = -(heelLift * 0.55);
+
+  // Arm origins at shoulders
   var trailSX = shouldX - 2;
   var trailSY = shouldY;
   var leadSX  = shouldX + 2;
   var leadSY  = shouldY;
 
-  var armLen  = 16;
-  var foreLen = 14;
+  var armLen = 16;
 
-  // Trail arm end
+  // Arm endpoints
   var trailElbX = trailSX + Math.sin(trailA) * armLen;
   var trailElbY = trailSY - Math.cos(trailA) * armLen;
-  // Lead arm end (hands meet near trail elbow at top)
   var leadElbX  = leadSX  + Math.sin(leadA)  * armLen;
   var leadElbY  = leadSY  - Math.cos(leadA)  * armLen;
-  // Hands = midpoint of two elbows
+
+  // Hands = midpoint of arm ends
   var handsX = (trailElbX + leadElbX) / 2;
   var handsY = (trailElbY + leadElbY) / 2;
 
-  // Club end
+  // Club
   var clubLen  = 26;
   var clubEndX = handsX + Math.sin(clubA) * clubLen;
   var clubEndY = handsY - Math.cos(clubA) * clubLen;
-
-  // Foot positions
-  var backFootX  = hipX - 10;
-  var frontFootX = hipX + 8;
-  var groundY    = 0;
 
   // Colors
   var shirtColor  = color;
@@ -2689,13 +2703,24 @@ function drawGolfer(ctx, x, y, frame, facingRight, color) {
   ctx.lineWidth = 5;
   ctx.beginPath();
   ctx.moveTo(hipX, hipY);
-  ctx.quadraticCurveTo(backKneeX, backKneeY, backFootX, groundY);
+  ctx.quadraticCurveTo(backKneeX, backKneeY, backFootX, ankleY);
   ctx.stroke();
-  // back shoe
+  // Back shoe — heel pivots up when heelLift > 0
   ctx.fillStyle = shoeColor;
   ctx.beginPath();
-  ctx.ellipse(backFootX - 2, groundY, 7, 3, 0, 0, PI * 2);
+  ctx.moveTo(backFootX - 5, ankleY - 2);            // heel top
+  ctx.lineTo(backFootX - 5 + heelLift * 0.4, ankleY + 3); // heel bottom (swings up)
+  ctx.lineTo(backFootX + 7, 2);                      // toe bottom (on ground)
+  ctx.lineTo(backFootX + 6, -1);                     // toe top
+  ctx.closePath();
   ctx.fill();
+  // Shoe sole line
+  ctx.strokeStyle = '#0a0808';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(backFootX - 5 + heelLift * 0.4, ankleY + 3);
+  ctx.lineTo(backFootX + 7, 2);
+  ctx.stroke();
 
   // ── TRAIL ARM (behind body) ──
   ctx.strokeStyle = shirtDark;
@@ -2784,7 +2809,7 @@ function drawGolfer(ctx, x, y, frame, facingRight, color) {
 
   // ── FRONT LEG ──
   var frontKneeX = frontFootX + (hipX - frontFootX) * 0.4;
-  var frontKneeY = hipY + (groundY - hipY) * 0.48 - knee * 0.5;
+  var frontKneeY = hipY + (groundY - hipY) * 0.48 - knee * 0.4;
   ctx.strokeStyle = pantColor;
   ctx.lineWidth = 6;
   ctx.beginPath();
@@ -2798,13 +2823,12 @@ function drawGolfer(ctx, x, y, frame, facingRight, color) {
   ctx.moveTo(hipX + 1, hipY);
   ctx.quadraticCurveTo(frontKneeX + 1, frontKneeY, frontFootX + 1, groundY);
   ctx.stroke();
-  // front shoe
+  // front shoe (stays flat on ground throughout)
   ctx.fillStyle = shoeColor;
   ctx.beginPath();
   ctx.ellipse(frontFootX + 3, groundY, 8, 3, 0, 0, PI * 2);
   ctx.fill();
-  // shoe highlight
-  ctx.fillStyle = '#3a2828';
+  ctx.fillStyle = '#2a2020';
   ctx.beginPath();
   ctx.ellipse(frontFootX + 2, groundY - 1, 4, 1.5, 0, 0, PI * 2);
   ctx.fill();
