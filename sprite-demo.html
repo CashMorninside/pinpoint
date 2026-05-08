@@ -42,154 +42,130 @@
     <button class="btn" id="btnPlay">PAUSE</button>
     <button class="btn" id="btnSlower">SLOWER</button>
     <button class="btn" id="btnFaster">FASTER</button>
+    <button class="btn" id="btnFlip">FLIP (RIVAL)</button>
   </div>
 </div>
 
 <script>
-// ── PALETTE ──
-// 'c' = team color, 'd' = dark team, 't' = shirt, 'a' = arm (all team-colored)
-// 'h'/'n' = skin, 'g' = glove, 'e' = belt, 'w' = buckle
-// 'p' = pants, 'k' = pants dark, 's' = shoe
-// 'l' = shaft, 'j' = grip, 'f' = club head
+// Flat silhouette: 'b'=body (team color), 'l'=shaft, 'f'=club head
 
 function makePalette(tc) {
-  var td = darken(tc, 40);
-  return {
-    'o': '#1a1010',
-    'c': tc, 'd': td, 't': tc, 'a': tc,
-    'h': '#e8b888', 'n': '#c8845a',
-    'g': '#f0f0ee',
-    'e': '#3a2800', 'w': '#c8a840',
-    'p': '#3060a8', 'k': '#1a3870',
-    's': '#1a1212',
-    'l': '#c8c8c8', 'j': '#2a1800', 'f': '#787878'
-  };
+  return { 'b': tc, 'l': '#d4d4d4', 'f': '#909090' };
 }
 
-function darken(hex, amt) {
-  var n = parseInt(hex.slice(1), 16);
-  var r = Math.max(0, (n>>16) - amt);
-  var g = Math.max(0, ((n>>8)&255) - amt);
-  var b = Math.max(0, (n&255) - amt);
-  return '#' + ((r<<16)|(g<<8)|b).toString(16).padStart(6,'0');
-}
-
-// ── SPRITE FRAMES ── Mario Golf-inspired: chunky, dark outlines ('o'), prominent club
-// 16x32 grid. Row 0 = top (cap), row 31 = bottom (feet). Golfer faces RIGHT.
 var FRAMES = (function() {
-  var H = [  // rows 0-7: head/cap
-    '.......ooooooo..',  // 0: cap top outline
-    '......occccoo...',  // 1: cap body
-    '......occccdoo..',  // 2: cap + dark visor tip
-    '.....ohhhhhhhoo.',  // 3: forehead with outline
-    '....ohhhhhhhhoo.',  // 4: face widest
-    '....ohhnnnhhhoo.',  // 5: lower face (n=shadow)
-    '.......onno.....',  // 6: neck
-    '.....ottttttoo..',  // 7: shoulders
+  var H = [
+    '.......bbbbb....',
+    '......bbbbbbbb..',
+    '......bbbbbbb...',
+    '......bbbbbbb...',
+    '......bbbbbbb...',
+    '.......bbbbb....',
+    '......bbbbbbb...',
+    '.....bbbbbbbbb..',
   ];
-  var L = [  // rows 18-31: legs/feet
-    '.....oppppppoo..',  // 18: hips
-    '....okpppppkoo..',  // 19: upper thighs
-    '....okpp.ppko...',  // 20: legs split
-    '....okpp.ppko...',  // 21
-    '....okpp.ppko...',  // 22
-    '....okpp.ppko...',  // 23
-    '....okpp.ppko...',  // 24
-    '....okss.ssko...',  // 25: ankles
-    '...oossss.ssoo..',  // 26: feet
-    '...oossss.ssoo..',  // 27
-    '....ossss.ssoo..',  // 28
-    '................',  // 29
-    '................',  // 30
-    '................',  // 31
+  var L = [
+    '.....bbbbbbb....',
+    '.....bb...bb....',
+    '.....bb...bb....',
+    '.....bb...bb....',
+    '.....bb...bb....',
+    '.....bb...bb....',
+    '.....bb...bb....',
+    '.....bb...bb....',
+    '....bbb...bbb...',
+    '....bbb...bbb...',
+    '....bbb...bbb...',
+    '................',
+    '................',
+    '................',
   ];
   var A = [
-    [ // F0: ADDRESS -- arms hang down, club grounded at ball (right)
-      '.....ottttttoo..',  // 8
-      '.....ottttttoo..',  // 9
-      '.....ottttttoo..',  // 10
-      '.....ottttaaoo..',  // 11: arm extending down
-      '....otttttajoo..',  // 12: arm + grip (j)
-      '....oeeeewtjloo.',  // 13: belt + grip + shaft (l)
-      '.....opppppllfo.',  // 14: pants + shaft + club head (f)
-      '.....oppppppoo..',  // 15
-      '.....ppppppoo...',  // 16
-      '................',  // 17
+    [ // F0: ADDRESS
+      '....bbbbbbbbb...',
+      '....bbbbbbbbbll.',
+      '....bbbbbbbbb.ll',
+      '.....bbbbbbbb..l',
+      '......bbbbbbb.lf',
+      '.......bbbbb....',
+      '.....bbbbbbb....',
+      '.....bbbbbbb....',
+      '.....bbbbbbb....',
+      '.....bbbbbbb....',
     ],
-    [ // F1: TAKEAWAY -- club sweeping back-left, low
-      '..fllottttttoo..',  // 8
-      '..jllottttttoo..',  // 9
-      '...llottttttoo..',  // 10
-      '....lotttttaoo..',  // 11
-      '....otttttajoo..',  // 12
-      '....oeeeewtjooo.',  // 13
-      '.....oppppppoo..',  // 14
-      '.....oppppppoo..',  // 15
-      '.....ppppppoo...',  // 16
-      '................',  // 17
+    [ // F1: TAKEAWAY
+      'fl..bbbbbbbbb...',
+      '.l..bbbbbbbbbbb.',
+      '..l.bbbbbbbbbbb.',
+      '...lbbbbbbbbbb..',
+      '....bbbbbbbbbbb.',
+      '.....bbbbbbbbb..',
+      '.....bbbbbbb....',
+      '.....bbbbbbb....',
+      '.....bbbbbbb....',
+      '.....bbbbbbb....',
     ],
-    [ // F2: BACKSWING -- arms hip-high, club mid-left
-      '.fllottttttoo...',  // 8
-      '..ljottttttoo...',  // 9
-      '..jaottttttoo...',  // 10
-      '...aottttttoo...',  // 11
-      '....ottttttoo...',  // 12
-      '....oeeeewtoo...',  // 13
-      '.....oppppppoo..',  // 14
-      '.....oppppppoo..',  // 15
-      '.....ppppppoo...',  // 16
-      '................',  // 17
+    [ // F2: BACKSWING
+      'fl..bbbbbbbbbb..',
+      '.ll.bbbbbbbbbb..',
+      '..llbbbbbbbbbbb.',
+      '....bbbbbbbbbbb.',
+      '....bbbbbbbbbbb.',
+      '.....bbbbbbbbb..',
+      '.....bbbbbbb....',
+      '.....bbbbbbb....',
+      '.....bbbbbbb....',
+      '.....bbbbbbb....',
     ],
-    [ // F3: TOP -- club + arms high-left, shaft nearly horizontal
-      'oflottttttoo....',  // 8
-      '.lljottttttoo...',  // 9
-      '..jaaottttoo....',  // 10
-      '...aaottttoo....',  // 11
-      '....ottttttoo...',  // 12
-      '....oeeeewtoo...',  // 13
-      '.....oppppppoo..',  // 14
-      '.....oppppppoo..',  // 15
-      '.....ppppppoo...',  // 16
-      '................',  // 17
+    [ // F3: TOP
+      'fll.bbbbbbbbbbb.',
+      '..llbbbbbbbbbb..',
+      '...lbbbbbbbbbbb.',
+      '....bbbbbbbbbbb.',
+      '....bbbbbbbbbbb.',
+      '.....bbbbbbbbb..',
+      '.....bbbbbbb....',
+      '.....bbbbbbb....',
+      '.....bbbbbbb....',
+      '.....bbbbbbb....',
     ],
-    [ // F4: TRANSITION -- arms dropping, club center-high
-      '...fllottttoo...',  // 8
-      '....llaottttoo..',  // 9
-      '....laottttoo...',  // 10
-      '....joottttoo...',  // 11
-      '....oottttttoo..',  // 12
-      '....oeeeewtoo...',  // 13
-      '.....oppppppoo..',  // 14
-      '.....oppppppoo..',  // 15
-      '.....ppppppoo...',  // 16
-      '................',  // 17
+    [ // F4: TRANSITION
+      '..fl.bbbbbbbbbb.',
+      '...l.bbbbbbbbbbb',
+      '...llbbbbbbbbbb.',
+      '....bbbbbbbbbbb.',
+      '....bbbbbbbbbbb.',
+      '.....bbbbbbbbb..',
+      '.....bbbbbbb....',
+      '.....bbbbbbb....',
+      '.....bbbbbbb....',
+      '.....bbbbbbb....',
     ],
-    [ // F5: IMPACT -- arms driving through, club at ball (right)
-      '.....ottttttaao.',  // 8
-      '.....ottttttaajo',  // 9
-      '.....otttttttjoo',  // 10
-      '.....ottttttjloo',  // 11
-      '.....ottttttlloo',  // 12
-      '.....oeeeewttllf',  // 13: belt + club head (f) at ball
-      '.....oppppppoo..',  // 14
-      '.....oppppppoo..',  // 15
-      '.....ppppppoo...',  // 16
-      '................',  // 17
+    [ // F5: IMPACT
+      '....bbbbbbbbbbb.',
+      '....bbbbbbbbbbb.',
+      '....bbbbbbbbbbb.',
+      '.....bbbbbbbbll.',
+      '......bbbbbbb.ff',
+      '.......bbbbb....',
+      '.....bbbbbbb....',
+      '.....bbbbbbb....',
+      '.....bbbbbbb....',
+      '.....bbbbbbb....',
     ],
-    [ // F6: FINISH -- arms wrapped high-right, club over shoulder
-      '.....ottttttlfo.',  // 8
-      '.....ottttttalo.',  // 9
-      '.....ottttttalo.',  // 10
-      '.....otttttaaoo.',  // 11
-      '....ottttttajoo.',  // 12
-      '....oeeeewtaooo.',  // 13
-      '.....oppppppoo..',  // 14
-      '.....oppppppoo..',  // 15
-      '.....ppppppoo...',  // 16
-      '................',  // 17
+    [ // F6: FINISH
+      '.....bbbbbbbbllf',
+      '.....bbbbbbbbbll',
+      '....bbbbbbbbbll.',
+      '....bbbbbbbbbll.',
+      '....bbbbbbbbbll.',
+      '.....bbbbbbbbb..',
+      '.....bbbbbbb....',
+      '.....bbbbbbb....',
+      '.....bbbbbbb....',
+      '.....bbbbbbb....',
     ],
   ];
-
   var frames = [];
   for (var fi = 0; fi < 7; fi++) {
     var frame = [];
@@ -204,15 +180,18 @@ var FRAMES = (function() {
 
 var FRAME_NAMES = ['Address','Takeaway','Backswing','Top','Transition','Impact','Finish'];
 
+var _demoFlipped = false;
+
 function drawSprite(ctx, cx, cy, frameIdx, tc, scale) {
   var P = makePalette(tc);
   var rows = FRAMES[Math.max(0, Math.min(frameIdx, 6))];
-  var ox = cx - 7 * scale;
+  var ox = cx - 8 * scale;
   var oy = cy - 32 * scale;
   for (var r = 0; r < rows.length; r++) {
-    var row = rows[r];
+    var rowStr = rows[r];
     for (var c = 0; c < 16; c++) {
-      var ch = row[c];
+      var srcCol = _demoFlipped ? (15 - c) : c;
+      var ch = rowStr[srcCol];
       if (ch === '.') continue;
       var col = P[ch];
       if (!col) continue;
@@ -305,6 +284,12 @@ document.getElementById('btnSlower').addEventListener('click', function() {
 document.getElementById('btnFaster').addEventListener('click', function() {
   animInterval = Math.max(80, animInterval - 60);
   startAnim();
+});
+document.getElementById('btnFlip').addEventListener('click', function() {
+  _demoFlipped = !_demoFlipped;
+  this.textContent = _demoFlipped ? 'FLIP (PLAYER)' : 'FLIP (RIVAL)';
+  renderAllFrames();
+  renderAnim();
 });
 
 renderAllFrames();

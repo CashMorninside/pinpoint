@@ -2544,10 +2544,10 @@ function drawBattleCanvas(ts) {
   ctx.fill();
   if (_rivalSwingFrame === 5) {
     ctx.save(); ctx.globalAlpha = 0.20;
-    drawGolferPixel(ctx, rivalX, rivalGroundY, 4, B.rival.color, 2);
+    drawGolferPixel(ctx, rivalX, rivalGroundY, 4, B.rival.color, 2, true);
     ctx.restore();
   }
-  drawGolferPixel(ctx, rivalX, rivalGroundY, _rivalSwingFrame, B.rival.color, 2);
+  drawGolferPixel(ctx, rivalX, rivalGroundY, _rivalSwingFrame, B.rival.color, 2, true);
 
   // ── PLAYER SPRITE (foreground, pixel art back-view) ──
   var playerX = 130, playerGroundY = 172;
@@ -3081,118 +3081,118 @@ function drawGolferBack(ctx, x, y, frame, color) {
 }
 
 var GOLFER_SPRITE_FRAMES = (function() {
-  // Mario Golf-inspired: chunky proportions, dark outlines ('o'), prominent club.
-  // 16x32 grid, golfer faces RIGHT. Backswing = club LEFT, follow-through = club RIGHT.
+  // Flat silhouette style: 'b'=body (team color), 'l'=club shaft, 'f'=club head
+  // 16x32 grid. Golfer faces RIGHT. Mirror horizontally for left-facing rival.
   var H = [  // rows 0-7: head/cap
-    '.......ooooooo..',  // 0: cap top outline
-    '......occccoo...',  // 1: cap body
-    '......occccdoo..',  // 2: cap + dark visor tip
-    '.....ohhhhhhhoo.',  // 3: forehead with outline
-    '....ohhhhhhhhoo.',  // 4: face widest
-    '....ohhnnnhhhoo.',  // 5: lower face (n=shadow)
-    '.......onno.....',  // 6: neck
-    '.....ottttttoo..',  // 7: shoulders
+    '.......bbbbb....',  // 0: head top
+    '......bbbbbbbb..',  // 1: head + cap visor right
+    '......bbbbbbb...',  // 2: head
+    '......bbbbbbb...',  // 3: head
+    '......bbbbbbb...',  // 4: head lower
+    '.......bbbbb....',  // 5: neck
+    '......bbbbbbb...',  // 6: shoulders
+    '.....bbbbbbbbb..',  // 7: chest
   ];
   var L = [  // rows 18-31: legs/feet
-    '.....oppppppoo..',  // 18: hips
-    '....okpppppkoo..',  // 19: upper thighs
-    '....okpp.ppko...',  // 20: legs split
-    '....okpp.ppko...',  // 21
-    '....okpp.ppko...',  // 22
-    '....okpp.ppko...',  // 23
-    '....okpp.ppko...',  // 24
-    '....okss.ssko...',  // 25: ankles
-    '...oossss.ssoo..',  // 26: feet
-    '...oossss.ssoo..',  // 27
-    '....ossss.ssoo..',  // 28
+    '.....bbbbbbb....',  // 18: hips
+    '.....bb...bb....',  // 19: legs split
+    '.....bb...bb....',  // 20
+    '.....bb...bb....',  // 21
+    '.....bb...bb....',  // 22
+    '.....bb...bb....',  // 23
+    '.....bb...bb....',  // 24
+    '.....bb...bb....',  // 25: ankles
+    '....bbb...bbb...',  // 26: feet
+    '....bbb...bbb...',  // 27
+    '....bbb...bbb...',  // 28
     '................',  // 29
     '................',  // 30
     '................',  // 31
   ];
   var A = [
-    [ // F0: ADDRESS -- arms hang down, club grounded at ball (right)
-      '.....ottttttoo..',  // 8: upper shirt
-      '.....ottttttoo..',  // 9
-      '.....ottttttoo..',  // 10
-      '.....ottttaaoo..',  // 11: arm extending down
-      '....otttttajoo..',  // 12: arm + grip (j)
-      '....oeeeewtjloo.',  // 13: belt + grip + shaft (l)
-      '.....opppppllfo.',  // 14: pants + shaft + club head (f)
-      '.....oppppppoo..',  // 15: pants
-      '.....ppppppoo...',  // 16
-      '................',  // 17
+    [ // F0: ADDRESS -- arms down, club grounded right
+      '....bbbbbbbbb...',  // 8
+      '....bbbbbbbbbll.',  // 9: arm right + shaft
+      '....bbbbbbbbb.ll',  // 10: shaft diagonal
+      '.....bbbbbbbb..l',  // 11: shaft going down
+      '......bbbbbbb.lf',  // 12: shaft + club head
+      '.......bbbbb....',  // 13: waist
+      '.....bbbbbbb....',  // 14
+      '.....bbbbbbb....',  // 15
+      '.....bbbbbbb....',  // 16
+      '.....bbbbbbb....',  // 17
     ],
     [ // F1: TAKEAWAY -- club sweeping back-left, low
-      '..fllottttttoo..',  // 8: club (f) + shaft to torso
-      '..jllottttttoo..',  // 9: grip (j) + shaft
-      '...llottttttoo..',  // 10: shaft + torso
-      '....lotttttaoo..',  // 11: shaft + arm
-      '....otttttajoo..',  // 12: arm + grip
-      '....oeeeewtjooo.',  // 13: belt + grip
-      '.....oppppppoo..',  // 14: pants
-      '.....oppppppoo..',  // 15
-      '.....ppppppoo...',  // 16
-      '................',  // 17
+      'fl..bbbbbbbbb...',  // 8: club head left
+      '.l..bbbbbbbbbbb.',  // 9: shaft
+      '..l.bbbbbbbbbbb.',  // 10: shaft + arm
+      '...lbbbbbbbbbb..',  // 11: shaft reaching body
+      '....bbbbbbbbbbb.',  // 12: body
+      '.....bbbbbbbbb..',  // 13: waist
+      '.....bbbbbbb....',  // 14
+      '.....bbbbbbb....',  // 15
+      '.....bbbbbbb....',  // 16
+      '.....bbbbbbb....',  // 17
     ],
-    [ // F2: BACKSWING -- arms hip-high, club mid-left
-      '.fllottttttoo...',  // 8: club + shaft
-      '..ljottttttoo...',  // 9: grip + torso
-      '..jaottttttoo...',  // 10: grip + arm
-      '...aottttttoo...',  // 11: arm elevated
-      '....ottttttoo...',  // 12: torso (arm above)
-      '....oeeeewtoo...',  // 13: belt
-      '.....oppppppoo..',  // 14: pants
-      '.....oppppppoo..',  // 15
-      '.....ppppppoo...',  // 16
-      '................',  // 17
+    [ // F2: BACKSWING -- club mid-left, hip height
+      'fl..bbbbbbbbbb..',  // 8: club higher left
+      '.ll.bbbbbbbbbb..',  // 9: shaft
+      '..llbbbbbbbbbbb.',  // 10: shaft to torso
+      '....bbbbbbbbbbb.',  // 11: body + arm going left
+      '....bbbbbbbbbbb.',  // 12: body
+      '.....bbbbbbbbb..',  // 13: waist
+      '.....bbbbbbb....',  // 14
+      '.....bbbbbbb....',  // 15
+      '.....bbbbbbb....',  // 16
+      '.....bbbbbbb....',  // 17
     ],
-    [ // F3: TOP -- club + arms high-left, shaft nearly horizontal
-      'oflottttttoo....',  // 8: club at top-left corner
-      '.lljottttttoo...',  // 9: shaft + grip
-      '..jaaottttoo....',  // 10: grip + arm
-      '...aaottttoo....',  // 11: arm coming to torso
-      '....ottttttoo...',  // 12: torso
-      '....oeeeewtoo...',  // 13: belt
-      '.....oppppppoo..',  // 14: pants
-      '.....oppppppoo..',  // 15
-      '.....ppppppoo...',  // 16
-      '................',  // 17
+    [ // F3: TOP -- club high-left, nearly overhead
+      'fll.bbbbbbbbbbb.',  // 8: club near-vertical top-left
+      '..llbbbbbbbbbb..',  // 9: shaft
+      '...lbbbbbbbbbbb.',  // 10: shaft + arm
+      '....bbbbbbbbbbb.',  // 11: body
+      '....bbbbbbbbbbb.',  // 12: body
+      '.....bbbbbbbbb..',  // 13: waist
+      '.....bbbbbbb....',  // 14
+      '.....bbbbbbb....',  // 15
+      '.....bbbbbbb....',  // 16
+      '.....bbbbbbb....',  // 17
     ],
     [ // F4: TRANSITION -- arms dropping, club center-high
-      '...fllottttoo...',  // 8: club dropping
-      '....llaottttoo..',  // 9: shaft + arm
-      '....laottttoo...',  // 10: arm
-      '....joottttoo...',  // 11: grip + torso
-      '....oottttttoo..',  // 12: arms folding to torso
-      '....oeeeewtoo...',  // 13: belt
-      '.....oppppppoo..',  // 14: pants
-      '.....oppppppoo..',  // 15
-      '.....ppppppoo...',  // 16
-      '................',  // 17
+      '..fl.bbbbbbbbbb.',  // 8: club dropping
+      '...l.bbbbbbbbbbb',  // 9: shaft
+      '...llbbbbbbbbbb.',  // 10: shaft + arm
+      '....bbbbbbbbbbb.',  // 11: body
+      '....bbbbbbbbbbb.',  // 12: body
+      '.....bbbbbbbbb..',  // 13: waist
+      '.....bbbbbbb....',  // 14
+      '.....bbbbbbb....',  // 15
+      '.....bbbbbbb....',  // 16
+      '.....bbbbbbb....',  // 17
     ],
-    [ // F5: IMPACT -- arms driving through, club at ball (right)
-      '.....ottttttaao.',  // 8: arms extending right
-      '.....ottttttaajo',  // 9: arm + grip
-      '.....otttttttjoo',  // 10: grip + shaft start
-      '.....ottttttjloo',  // 11: shaft (l) going right
-      '.....ottttttlloo',  // 12: shaft
-      '.....oeeeewttllf',  // 13: belt + shaft + club head (f) at ball
-      '.....oppppppoo..',  // 14: pants
-      '.....oppppppoo..',  // 15
-      '.....ppppppoo...',  // 16
-      '................',  // 17
+    [ // F5: IMPACT -- arms through, club at ball right
+      '....bbbbbbbbbbb.',  // 8: body + arm right
+      '....bbbbbbbbbbb.',  // 9
+      '....bbbbbbbbbbb.',  // 10
+      '.....bbbbbbbbll.',  // 11: shaft horizontal
+      '......bbbbbbb.ff',  // 12: club head at ball
+      '.......bbbbb....',  // 13: waist
+      '.....bbbbbbb....',  // 14
+      '.....bbbbbbb....',  // 15
+      '.....bbbbbbb....',  // 16
+      '.....bbbbbbb....',  // 17
     ],
-    [ // F6: FINISH -- arms wrapped high-right, club over shoulder
-      '.....ottttttlfo.',  // 8: club head (f) high-right
-      '.....ottttttalo.',  // 9: arm + shaft
-      '.....ottttttalo.',  // 10: arm
-      '.....otttttaaoo.',  // 11: arm up
-      '....ottttttajoo.',  // 12: grip wrapping
-      '....oeeeewtaooo.',  // 13: belt + arm high
-      '.....oppppppoo..',  // 14: pants
-      '.....oppppppoo..',  // 15
-      '.....ppppppoo...',  // 16
-      '................',  // 17
+    [ // F6: FINISH -- arms wrapped high-right
+      '.....bbbbbbbbllf',  // 8: club head high-right
+      '.....bbbbbbbbbll',  // 9: shaft
+      '....bbbbbbbbbll.',  // 10: arm + shaft
+      '....bbbbbbbbbll.',  // 11
+      '....bbbbbbbbbll.',  // 12: body + shaft
+      '.....bbbbbbbbb..',  // 13: waist
+      '.....bbbbbbb....',  // 14
+      '.....bbbbbbb....',  // 15
+      '.....bbbbbbb....',  // 16
+      '.....bbbbbbb....',  // 17
     ],
   ];
   var frames = [];
@@ -3207,26 +3207,23 @@ var GOLFER_SPRITE_FRAMES = (function() {
   return frames;
 })();
 
-function drawGolferPixel(ctx, cx, cy, frame, teamColor, scale) {
+function drawGolferPixel(ctx, cx, cy, frame, teamColor, scale, facingLeft) {
   if (scale === undefined) scale = 3;
+  if (facingLeft === undefined) facingLeft = false;
   var tc = teamColor || '#50c878';
-  var td = _darkenColor(tc, 40);
   var P = {
-    'o': '#1a1010',
-    'c': tc, 'd': td, 't': tc, 'a': tc,
-    'h': '#e8b888', 'n': '#c8845a',
-    'g': '#f0f0ee',
-    'e': '#3a2800', 'w': '#c8a840',
-    'p': '#3060a8', 'k': '#1a3870', 's': '#1a1212',
-    'l': '#c8c8c8', 'j': '#2a1800', 'f': '#787878'
+    'b': tc,
+    'l': '#d4d4d4',
+    'f': '#909090'
   };
   var rows = GOLFER_SPRITE_FRAMES[Math.max(0, Math.min(frame, 6))];
-  var ox = Math.floor(cx) - 7 * scale;   // shift left 1px so body center aligns to cx
+  var ox = Math.floor(cx) - 8 * scale;
   var oy = Math.floor(cy) - 32 * scale;
   for (var r = 0; r < rows.length; r++) {
-    var row = rows[r];
+    var rowStr = rows[r];
     for (var c = 0; c < 16; c++) {
-      var ch = row[c];
+      var srcCol = facingLeft ? (15 - c) : c;
+      var ch = rowStr[srcCol];
       if (ch === '.') continue;
       var color = P[ch];
       if (!color) continue;
@@ -3239,7 +3236,8 @@ function drawGolferPixel(ctx, cx, cy, frame, teamColor, scale) {
     ctx.globalAlpha = _impactFlash;
     ctx.fillStyle = '#ffffff';
     ctx.beginPath();
-    ctx.arc(ox + 15 * scale, oy + 13 * scale, 3 * scale, 0, 6.283);
+    var flashX = facingLeft ? (ox + 1 * scale) : (ox + 14 * scale);
+    ctx.arc(flashX, oy + 12 * scale, 3 * scale, 0, 6.283);
     ctx.fill();
     ctx.restore();
   }
