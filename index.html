@@ -2120,6 +2120,7 @@ function startBattle(locId) {
   // init rival record
   if (!G.rivals[rival.id]) G.rivals[rival.id] = {met:false, wins:0, losses:0, cardSeen:false};
   G.rivals[rival.id].met = true;
+  saveGame();
 
   B = {
     locId: locId,
@@ -4330,6 +4331,11 @@ function finishMatch() {
   G.xp += xpGain;
   G.cash += cashGain;
 
+  // Save immediately so progress is never lost even if post-match flow is interrupted
+  if (playerWon) unlockNextCourse(B.locId);
+  checkBadges();
+  saveGame();
+
   var resultWord = playerWon ? 'VICTORY!' : 'DEFEAT';
   var resultColor = playerWon ? '#50c878' : '#d63a3a';
   var endResult = safeGet('end-sc-result');
@@ -4384,11 +4390,6 @@ function renderEndScorecard() {
 
 function afterMatchFlow(playerWon, rivalId) {
   // Unlock next course if applicable
-  if (playerWon) {
-    unlockNextCourse(B.locId);
-    checkBadges();
-  }
-
   var rival = RIVALS_DATA[rivalId];
   var postMsg = playerWon ? rival.postWin : rival.postLoss;
   openDialogue([{speaker: rival.name, icon: rival.icon, text: postMsg}], function() {
